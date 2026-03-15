@@ -5,8 +5,8 @@ import os
 
 from app.config import settings
 from app.database import engine, Base
-from app.models import user, branch, department, employee, category, asset, assignment, audit_log
-from app.api import auth, branches, departments, employees, categories, assets, assignments, qrcode, audit_logs, statistics, upload, ai
+from app.models import user, branch, department, employee, category, asset, assignment, audit_log, request
+from app.api import auth, branches, departments, employees, categories, assets, assignments, qrcode, audit_logs, statistics, upload, ai, requests
 
 Base.metadata.create_all(bind=engine)
 
@@ -49,6 +49,7 @@ app.include_router(audit_logs.router)
 app.include_router(statistics.router)
 app.include_router(upload.router)
 app.include_router(ai.router)
+app.include_router(requests.router)
 
 
 @app.get("/api/health")

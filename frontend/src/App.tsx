@@ -51,7 +51,7 @@ function AppRoutes() {
             <Route path="/scan" element={<QRScanPage />} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/ai-analytics" element={<AIAnalytics />} />
-            <Route path="/audit-log" element={<AuditLog />} />
+<Route path="/audit-log" element={<AuditLog />} />
           </>
         )}
       </Route>

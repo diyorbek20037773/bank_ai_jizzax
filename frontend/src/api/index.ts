@@ -109,6 +109,18 @@ export const aiAutoFill = (name: string) =>
     _attempts?: any[];
   }>("/api/ai/auto-fill", { name });
 
+// Requests (user -> admin)
+export const createRequest = (data: {
+  asset_id?: number; request_type: string;
+  requested_status?: string; reason: string; photo_path?: string;
+}) => api.post("/api/requests/", data);
+
+export const getMyRequests = () => api.get("/api/requests/my");
+export const getAllRequests = () => api.get("/api/requests/");
+export const getPendingCount = () => api.get<{ count: number }>("/api/requests/pending-count");
+export const respondToRequest = (id: number, data: { status: string; admin_response?: string }) =>
+  api.patch(`/api/requests/${id}`, data);
+
 // Upload
 export const uploadPhoto = (file: File) => {
   const formData = new FormData();
