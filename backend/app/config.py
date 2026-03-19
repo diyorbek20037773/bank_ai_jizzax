@@ -3,7 +3,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     APP_NAME: str = "Bank Asset Management"
-    DATABASE_URL: str = "sqlite:///./bank_assets.db"
+    # PostgreSQL database configuration
+    DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/bank_assets"
     SECRET_KEY: str = "hackathon-secret-key-2026-bank-assets"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
