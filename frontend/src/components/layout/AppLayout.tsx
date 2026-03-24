@@ -1,13 +1,15 @@
-import { useState } from "react";
-import { Layout, Menu, Button, Avatar, Dropdown, Tag } from "antd";
+import { useState, useEffect } from "react";
+import { Layout, Menu, Button, Avatar, Dropdown, Tag, Badge, Tooltip } from "antd";
 import {
   DashboardOutlined, LaptopOutlined, ScanOutlined,
   DatabaseOutlined, AuditOutlined, LogoutOutlined,
   MenuFoldOutlined, MenuUnfoldOutlined,
-  SafetyOutlined, RobotOutlined,
+  SafetyOutlined, RobotOutlined, BellOutlined,
+  SendOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { getPendingCount } from "../../api";
 import AIChatbot from "../ai/AIChatbot";
 
 const { Header, Sider, Content } = Layout;
@@ -19,10 +21,28 @@ export default function AppLayout() {
   const { user, logout } = useAuth();
 
   const isUser = user?.role === "user";
+  const isAdmin = user?.role === "admin";
+  const [pendingRequests, setPendingRequests] = useState(0);
+
+  useEffect(() => {
+    if (isAdmin) {
+      const fetchPending = () => {
+        getPendingCount().then(({ data }) => setPendingRequests(data.count)).catch(() => {});
+      };
+      fetchPending();
+      const interval = setInterval(fetchPending, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAdmin]);
 
   const adminMenuItems = [
     { key: "/", icon: <DashboardOutlined />, label: "Dashboard" },
     { key: "/assets", icon: <LaptopOutlined />, label: "Aktivlar" },
+    {
+      key: "/requests",
+      icon: <SendOutlined />,
+      label: <span>So'rovlar {pendingRequests > 0 && <Badge count={pendingRequests} size="small" style={{ marginLeft: 6 }} />}</span>,
+    },
     { key: "/scan", icon: <ScanOutlined />, label: "QR Skan" },
     { type: "divider" as const },
     { key: "/directory", icon: <DatabaseOutlined />, label: "Ma'lumotlar" },
@@ -80,6 +100,19 @@ export default function AppLayout() {
             onClick={() => setCollapsed(!collapsed)}
             style={{ fontSize: 16 }}
           />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {isAdmin && pendingRequests > 0 && (
+            <Tooltip title={`${pendingRequests} ta yangi so'rov`}>
+              <Badge count={pendingRequests} size="small">
+                <Button
+                  type="text"
+                  icon={<BellOutlined style={{ fontSize: 18 }} />}
+                  onClick={(e) => { e.stopPropagation(); navigate("/requests"); }}
+                  style={{ color: "#FA8C16" }}
+                />
+              </Badge>
+            </Tooltip>
+          )}
           <Dropdown
             menu={{
               items: [
@@ -123,12 +156,13 @@ export default function AppLayout() {
               </div>
             </div>
           </Dropdown>
+          </div>
         </Header>
         <Content className="content-area">
           <Outlet />
         </Content>
       </Layout>
-      <AIChatbot />
+      {isAdmin && <AIChatbot />}
     </Layout>
   );
 }

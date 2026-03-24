@@ -12,6 +12,7 @@ import Directory from "./pages/Directory";
 import AuditLog from "./pages/AuditLog";
 import AIAnalytics from "./pages/AIAnalytics";
 import MyAssets from "./pages/MyAssets";
+import AdminRequests from "./pages/AdminRequests";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -48,6 +49,7 @@ function AppRoutes() {
             <Route path="/assets/new" element={<AssetForm />} />
             <Route path="/assets/:id" element={<AssetDetail />} />
             <Route path="/assets/:id/edit" element={<AssetForm />} />
+            <Route path="/requests" element={<AdminRequests />} />
             <Route path="/scan" element={<QRScanPage />} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/ai-analytics" element={<AIAnalytics />} />
