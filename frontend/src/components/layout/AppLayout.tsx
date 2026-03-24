@@ -107,7 +107,7 @@ export default function AppLayout() {
                 <Button
                   type="text"
                   icon={<BellOutlined style={{ fontSize: 18 }} />}
-                  onClick={() => navigate("/requests")}
+                  onClick={(e) => { e.stopPropagation(); navigate("/requests"); }}
                   style={{ color: "#FA8C16" }}
                 />
               </Badge>
