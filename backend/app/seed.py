@@ -740,6 +740,74 @@ def seed():
             ))
             audit_count += 2
 
+    # ===== USER REQUESTS (sintetik so'rovlar) =====
+    from app.models.request import UserRequest
+    user_obj = users[1]  # "user" — oddiy xodim
+    user_assets_list = [a for a in assets if a.current_employee_id == user_employee.id and a.status == "ASSIGNED"]
+
+    request_data = []
+    if len(user_assets_list) >= 1:
+        request_data.append(UserRequest(
+            user_id=user_obj.id, asset_id=user_assets_list[0].id,
+            request_type="REPORT_DAMAGE",
+            reason="Monitor ekranida chiziqlar paydo bo'ldi, normal ishlash imkoni yo'q. Iltimos tekshirib ko'ring.",
+            photo_path=None, status="PENDING",
+            created_at=datetime.utcnow() - timedelta(hours=3),
+        ))
+    if len(user_assets_list) >= 2:
+        request_data.append(UserRequest(
+            user_id=user_obj.id, asset_id=user_assets_list[1].id,
+            request_type="STATUS_CHANGE", requested_status="IN_REPAIR",
+            reason="Noutbuk batareyasi tez quvvat yo'qotadi, 20 daqiqada o'chib qoladi. Ta'mirga yuborish kerak.",
+            photo_path=None, status="PENDING",
+            created_at=datetime.utcnow() - timedelta(hours=1),
+        ))
+    some_asset_1 = assets[5] if len(assets) > 5 else assets[0]
+    request_data.append(UserRequest(
+        user_id=user_obj.id, asset_id=some_asset_1.id,
+        request_type="REPORT_DAMAGE",
+        reason="Printer qog'oz tiqilib qoladi, mexanizm buzilgan.",
+        photo_path=None, status="APPROVED",
+        admin_response="Tasdiqlandi. Jihoz ta'mir bo'limiga yuborildi.",
+        responded_by=users[0].id,
+        responded_at=datetime.utcnow() - timedelta(days=2),
+        created_at=datetime.utcnow() - timedelta(days=3),
+    ))
+    some_asset_2 = assets[10] if len(assets) > 10 else assets[0]
+    request_data.append(UserRequest(
+        user_id=user_obj.id, asset_id=some_asset_2.id,
+        request_type="STATUS_CHANGE", requested_status="IN_REPAIR",
+        reason="Klaviatura tugmalari ishlamayapti, suyuqlik tushgan.",
+        photo_path=None, status="APPROVED",
+        admin_response="Qabul qilindi, jihozni IT bo'limiga olib keling.",
+        responded_by=users[0].id,
+        responded_at=datetime.utcnow() - timedelta(days=5),
+        created_at=datetime.utcnow() - timedelta(days=6),
+    ))
+    request_data.append(UserRequest(
+        user_id=user_obj.id, asset_id=some_asset_1.id,
+        request_type="OTHER",
+        reason="Yangi monitor so'rayman, hozirgi monitor eski.",
+        photo_path=None, status="REJECTED",
+        admin_response="Hozirgi monitor ishlayotgan ekan, almashtirishga asos yo'q.",
+        responded_by=users[0].id,
+        responded_at=datetime.utcnow() - timedelta(days=8),
+        created_at=datetime.utcnow() - timedelta(days=10),
+    ))
+    request_data.append(UserRequest(
+        user_id=user_obj.id, asset_id=None,
+        request_type="REPORT_LOST",
+        reason="Xizmat safarida planshet yo'qoldi.",
+        photo_path=None, status="REJECTED",
+        admin_response="Planshet sizga biriktirilmagan. Iltimos, to'g'ri aktivni ko'rsating.",
+        responded_by=users[0].id,
+        responded_at=datetime.utcnow() - timedelta(days=12),
+        created_at=datetime.utcnow() - timedelta(days=14),
+    ))
+    db.add_all(request_data)
+    db.flush()
+    print(f"  {len(request_data)} ta foydalanuvchi so'rovi yaratildi (2 pending, 2 approved, 2 rejected)")
+
     # ── Davr solishtirish uchun oxirgi 2 oy turli hajmdagi loglar ──
     # O'tgan oy — kam harakatlar, bu oy — ko'p harakatlar
     for extra_idx in range(15):
