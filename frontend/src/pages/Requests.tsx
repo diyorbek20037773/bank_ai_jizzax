@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { getAllRequests, respondToRequest } from "../api";
-import { STATUS_CONFIG, API_BASE } from "../utils/constants";
+import { API_BASE } from "../utils/constants";
 import dayjs from "dayjs";
 
 interface RequestItem {
