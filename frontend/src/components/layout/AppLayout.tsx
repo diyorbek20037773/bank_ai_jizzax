@@ -162,7 +162,7 @@ export default function AppLayout() {
           <Outlet />
         </Content>
       </Layout>
-      <AIChatbot />
+      {isAdmin && <AIChatbot />}
     </Layout>
   );
 }
