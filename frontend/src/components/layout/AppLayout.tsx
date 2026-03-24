@@ -40,7 +40,7 @@ export default function AppLayout() {
     { key: "/assets", icon: <LaptopOutlined />, label: "Aktivlar" },
     {
       key: "/requests",
-      icon: <Badge count={pendingRequests} size="small" offset={[6, 0]}><SendOutlined /></Badge>,
+      icon: <SendOutlined />,
       label: <span>So'rovlar {pendingRequests > 0 && <Badge count={pendingRequests} size="small" style={{ marginLeft: 6 }} />}</span>,
     },
     { key: "/scan", icon: <ScanOutlined />, label: "QR Skan" },
