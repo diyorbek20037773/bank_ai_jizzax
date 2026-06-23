@@ -3,12 +3,27 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 from app.config import settings
 
-# PostgreSQL connection with connection pooling
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_size=20,
-    max_overflow=10,
-)
+# Railway/Heroku ba'zan "postgres://" sxemasini beradi — SQLAlchemy 2.0
+# faqat "postgresql://" ni tushunadi. Avtomatik to'g'rilaymiz.
+DATABASE_URL = settings.DATABASE_URL
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+if DATABASE_URL.startswith("sqlite"):
+    # SQLite pool argumentlarini qo'llab-quvvatlamaydi
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+    )
+else:
+    # PostgreSQL — connection pooling + uzilgan ulanishlarni tekshirish
+    engine = create_engine(
+        DATABASE_URL,
+        pool_size=20,
+        max_overflow=10,
+        pool_pre_ping=True,
+        pool_recycle=300,
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
