@@ -67,10 +67,38 @@ Frontend: http://localhost:5173
 
 ---
 
-## Railway'ga deploy
+## Railway'ga deploy (tavsiya: 1 ta servis — Docker)
 
-Loyiha **monorepo** — bitta repoda 2 ta servis. Railway'da **2 ta alohida servis**
-yaratiladi va har biriga **Root Directory** belgilanadi.
+Repo ildizida **`Dockerfile`** bor: u frontend'ni build qiladi va FastAPI o'sha
+build'ni o'zi tarqatadi. Natija — **bitta servis, bitta domen, CORS yo'q**.
+
+1. **New → Database → PostgreSQL** qo'shing.
+2. **New → GitHub Repo** → shu repo. Railway ildizdagi `Dockerfile`ni avtomatik
+   topadi (Root Directory'ni **bo'sh** / `/` qoldiring — `backend` EMAS).
+3. **Variables:**
+
+   | Kalit | Qiymat |
+   |-------|--------|
+   | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
+   | `SECRET_KEY` | uzun tasodifiy maxfiy kalit |
+   | `GEMINI_API_KEY` | Gemini API kaliti |
+   | `BASE_URL` | servis public URL (QR-kodlar uchun) |
+
+   > `CORS_ORIGINS` va `VITE_API_BASE` **kerak emas** — frontend va API bitta domenda.
+   > Ixtiyoriy: `GEMINI_API_KEY_2/3` rate-limit fallback uchun.
+
+4. **Settings → Networking → Generate Domain.** Tayyor:
+   - `/` → React ilova (login: `admin/admin123`)
+   - `/api/health` → `{"status":"ok"}`, `/docs` → Swagger
+
+Birinchi ishga tushishda bo'sh DB ga `seed.py` demo ma'lumotlarni to'ldiradi.
+
+---
+
+## Muqobil: 2 ta alohida servis
+
+Frontend va backend'ni mustaqil scale qilmoqchi bo'lsangiz, har biriga
+**Root Directory** belgilab 2 ta servis qiling.
 
 ### 1. PostgreSQL qo'shish
 

@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import os
 
 from app.config import settings
@@ -55,3 +56,38 @@ app.include_router(requests.router)
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "app": settings.APP_NAME}
+
+
+# ─────────────────────────────────────────────
+# Frontend (React SPA) ni shu servisning o'zidan tarqatamiz.
+# Bu blok eng oxirida turishi shart — barcha /api/... va /docs
+# yo'llari avval ro'yxatga olinadi va ustun bo'ladi.
+# Docker build'da frontend /app/frontend_dist ga ko'chiriladi.
+# ─────────────────────────────────────────────
+FRONTEND_DIST = os.environ.get(
+    "FRONTEND_DIST",
+    os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"),
+)
+FRONTEND_DIST = os.path.abspath(FRONTEND_DIST)
+
+if os.path.isdir(FRONTEND_DIST):
+    _index = os.path.join(FRONTEND_DIST, "index.html")
+
+    @app.get("/{full_path:path}")
+    def serve_spa(full_path: str):
+        # Mavjud fayl bo'lsa (assets, favicon, ...) o'shani ber,
+        # aks holda SPA uchun index.html (React Router client-side routing).
+        candidate = os.path.abspath(os.path.join(FRONTEND_DIST, full_path))
+        if (
+            full_path
+            and candidate.startswith(FRONTEND_DIST)
+            and os.path.isfile(candidate)
+        ):
+            return FileResponse(candidate)
+        return FileResponse(_index)
+else:
+    print(
+        f"[startup] OGOHLANTIRISH: frontend_dist topilmadi ({FRONTEND_DIST}). "
+        "Faqat API ishlaydi. Docker build orqali deploy qiling.",
+        flush=True,
+    )

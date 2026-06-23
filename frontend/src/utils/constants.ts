@@ -22,4 +22,8 @@ export const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   WRITTEN_OFF: [],
 };
 
-export const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+// Prod (bitta servis): VITE_API_BASE berilmaydi -> relative "" -> so'rovlar
+// shu domenning o'ziga ketadi (/api/...). Dev: localhost:8000.
+export const API_BASE =
+  import.meta.env.VITE_API_BASE ??
+  (import.meta.env.PROD ? "" : "http://localhost:8000");
