@@ -5,6 +5,7 @@ import {
   ThunderboltOutlined, CameraOutlined, FileTextOutlined, AuditOutlined,
   GlobalOutlined, WarningOutlined, FileSearchOutlined, LineChartOutlined,
   BankOutlined, ApartmentOutlined, SafetyCertificateOutlined, UserOutlined,
+  YoutubeOutlined, PlayCircleOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useT } from "../i18n/I18nProvider";
@@ -12,6 +13,8 @@ import { useTheme } from "../context/ThemeContext";
 import { LANGS, LANG_SHORT, type Lang } from "../i18n/resources";
 
 const GITHUB_URL = "https://github.com/diyorbek20037773/bank_ai_jizzax";
+const VIDEO_URL = "https://youtu.be/Z7rvwo804CA";
+const VIDEO_EMBED = "https://www.youtube.com/embed/Z7rvwo804CA";
 
 const FEATURES = [
   { icon: <DatabaseOutlined />, key: "f1", color: "#1677FF" },
@@ -102,6 +105,9 @@ export default function Landing() {
             <Button type="primary" size="large" onClick={() => navigate("/login")}>
               {t("landing.ctaDemo")} <ArrowRightOutlined />
             </Button>
+            <Button size="large" icon={<YoutubeOutlined />} href={VIDEO_URL} target="_blank" danger>
+              {t("landing.watchDemo")}
+            </Button>
             <Button size="large" icon={<GithubOutlined />} href={GITHUB_URL} target="_blank">
               {t("landing.ctaGithub")}
             </Button>
@@ -113,6 +119,21 @@ export default function Landing() {
             <div className="landing-stat"><div className="ls-value">7</div><div className="ls-label">{t("landing.statAiFunctions")}</div></div>
             <div className="landing-stat"><div className="ls-value">3</div><div className="ls-label">{t("landing.statLanguages")}</div></div>
           </div>
+        </div>
+      </section>
+
+      {/* DEMO VIDEO */}
+      <section className="landing-section">
+        <h2 className="landing-h2">
+          <PlayCircleOutlined style={{ color: "#FF0000", marginRight: 10 }} />{t("landing.videoTitle")}
+        </h2>
+        <div className="landing-video">
+          <iframe
+            src={VIDEO_EMBED}
+            title="Bankir AI demo"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
         </div>
       </section>
 
