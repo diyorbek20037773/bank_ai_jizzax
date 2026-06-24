@@ -152,25 +152,32 @@ def _ask_ai(system_prompt: str, user_message: str) -> dict:
 
             except Exception as e:
                 error_msg = str(e)
+                last_error = e
+                logger.warning(f"[key{key_idx}:{model}] error: {error_msg[:160]}")
+
                 if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+                    # Limit — bu key+model ni belgilab, keyingisini sinash
                     _mark_rate_limited(key_idx, model)
                     attempts[-1]["status"] = "limit"
                     attempts[-1]["step"] = f"{key_label} — limit tugagan, boshqa manba sinab ko'rilmoqda..."
-                    logger.warning(f"[key{key_idx}:{model}] rate limited")
-                    last_error = e
                     continue
-                elif "403" in error_msg or "PERMISSION_DENIED" in error_msg:
-                    # Bu key butunlay ishlamaydi — barcha modellarini o'tkazib yuborish
+                elif (
+                    "403" in error_msg or "PERMISSION_DENIED" in error_msg
+                    or "400" in error_msg or "API_KEY_INVALID" in error_msg
+                    or "INVALID_ARGUMENT" in error_msg
+                ):
+                    # Kalit yaroqsiz/bloklangan — bu key dan voz kechib, keyingisiga o'tish
                     for m in MODELS:
                         _mark_rate_limited(key_idx, m)
                     attempts[-1]["status"] = "error"
                     attempts[-1]["step"] = f"{key_label} — kalit muammosi, keyingisiga o'tilmoqda..."
-                    last_error = e
-                    break  # bu key dan chiqish, keyingi key ga o'tish
+                    break  # keyingi key ga o'tish
                 else:
+                    # Boshqa har qanday xato (5xx, timeout, ulanish) — to'xtatmaymiz,
+                    # shu key bilan keyingi modelni / keyingi keyni sinaymiz
                     attempts[-1]["status"] = "error"
-                    attempts[-1]["step"] = f"Kutilmagan xato yuz berdi"
-                    raise
+                    attempts[-1]["step"] = f"{key_label} — vaqtinchalik xato, keyingisi sinab ko'rilmoqda..."
+                    continue
 
     # Hamma key va modellar tugadi
     if last_error:

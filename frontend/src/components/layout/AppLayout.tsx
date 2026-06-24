@@ -81,6 +81,7 @@ export default function AppLayout() {
         collapsible
         collapsed={collapsed}
         width={260}
+        collapsedWidth={0}
         className="app-sidebar"
         breakpoint="lg"
         onBreakpoint={(broken) => setCollapsed(broken)}
