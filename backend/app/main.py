@@ -18,6 +18,13 @@ try:
 except Exception as e:
     print(f"Seed xatosi (e'tiborsiz qoldirildi): {e}")
 
+# Demo akkaunt ismlarini har deployda kafolatlash (DB to'la bo'lsa ham)
+try:
+    from app.seed import ensure_demo_identity
+    ensure_demo_identity()
+except Exception as e:
+    print(f"Demo identity xatosi (e'tiborsiz): {e}")
+
 app = FastAPI(
     title=settings.APP_NAME,
     description="Bank ofisi aktivlarini boshqarish tizimi",

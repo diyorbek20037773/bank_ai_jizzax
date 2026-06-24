@@ -101,9 +101,10 @@ def seed():
     # ===== USERS =====
     # user rolini birinchi xodimga bog'laymiz
     user_employee = employees[0]
+    user_employee.full_name = "Timur Ishmetov"  # demo xodim
 
     users = [
-        User(username="admin", full_name="Administrator", email="admin@bank.uz",
+        User(username="admin", full_name="Alisher Usmonov", email="admin@bank.uz",
              hashed_password=get_password_hash("admin123"), role="admin"),
         User(username="user", full_name=user_employee.full_name, email="user@bank.uz",
              hashed_password=get_password_hash("user123"), role="user",
@@ -833,6 +834,31 @@ def seed():
           f"{len(employees)} xodim, {len(categories)} kategoriya, {len(assets)} aktiv")
 
     db.close()
+
+
+def ensure_demo_identity():
+    """Demo akkaunt ismlarini har deployda kafolatlaymiz (DB to'la bo'lsa ham).
+    admin -> Alisher Usmonov, user -> Timur Ishmetov."""
+    db = SessionLocal()
+    try:
+        admin = db.query(User).filter(User.username == "admin").first()
+        if admin and admin.full_name != "Alisher Usmonov":
+            admin.full_name = "Alisher Usmonov"
+
+        u = db.query(User).filter(User.username == "user").first()
+        if u:
+            if u.full_name != "Timur Ishmetov":
+                u.full_name = "Timur Ishmetov"
+            if u.employee_id:
+                emp = db.query(Employee).filter(Employee.id == u.employee_id).first()
+                if emp and emp.full_name != "Timur Ishmetov":
+                    emp.full_name = "Timur Ishmetov"
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"ensure_demo_identity xato: {e}")
+    finally:
+        db.close()
 
 
 if __name__ == "__main__":

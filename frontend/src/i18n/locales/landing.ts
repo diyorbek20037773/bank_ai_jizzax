@@ -65,6 +65,7 @@ export default {
     f8Desc: "O'zbek, rus, ingliz tillari va och/qorong'i mavzu",
     techTitle: "Texnologiyalar",
     footer: "Bank aktivlarini boshqarish tizimi · Jizzax AI Hackathon 2026",
+    developedBy: "DoʻppiX jamoasi tomonidan ishlab chiqildi",
   },
   ru: {
     login: "Войти в систему",
@@ -132,6 +133,7 @@ export default {
     f8Desc: "Узбекский, русский, английский и светлая/тёмная тема",
     techTitle: "Технологии",
     footer: "Система управления банковскими активами · Jizzax AI Hackathon 2026",
+    developedBy: "Разработано командой DoʻppiX",
   },
   en: {
     login: "Sign in",
@@ -199,5 +201,6 @@ export default {
     f8Desc: "Uzbek, Russian, English and light/dark theme",
     techTitle: "Technologies",
     footer: "Bank asset management system · Jizzax AI Hackathon 2026",
+    developedBy: "Developed by the DoʻppiX team",
   },
 };

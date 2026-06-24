@@ -189,7 +189,10 @@ export default function Landing() {
           <div className="landing-logo"><SafetyOutlined /></div>
           <span>{t("common.appName")}</span>
         </div>
-        <div style={{ opacity: 0.6, fontSize: 13 }}>{t("landing.footer")}</div>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>{t("landing.developedBy")}</div>
+          <div style={{ opacity: 0.6, fontSize: 12, marginTop: 2 }}>{t("landing.footer")}</div>
+        </div>
         <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="landing-footer-gh">
           <GithubOutlined /> GitHub
         </a>
