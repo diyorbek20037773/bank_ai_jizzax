@@ -130,15 +130,20 @@ def _ask_ai(system_prompt: str, user_message: str) -> dict:
 
             try:
                 client = genai.Client(api_key=api_key)
+                cfg_kwargs = dict(
+                    system_instruction=system_prompt,
+                    temperature=0.3,
+                    max_output_tokens=2048,
+                    response_mime_type="application/json",
+                )
+                # Tezlik uchun: 2.5-flash / flash-lite da "thinking" ni o'chiramiz.
+                # (pro thinking_budget=0 ni qabul qilmaydi — unga tegmaymiz.)
+                if model.startswith("gemini-2.5-flash") and hasattr(types, "ThinkingConfig"):
+                    cfg_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
                 response = client.models.generate_content(
                     model=model,
                     contents=user_message,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_prompt,
-                        temperature=0.3,
-                        max_output_tokens=4096,
-                        response_mime_type="application/json",
-                    ),
+                    config=types.GenerateContentConfig(**cfg_kwargs),
                 )
                 result_text = response.text or ""
                 result_text = re.sub(r"^```(?:json)?\s*\n?", "", result_text.strip())
