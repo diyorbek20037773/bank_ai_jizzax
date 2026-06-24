@@ -283,7 +283,7 @@ export default function AssetForm() {
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="serial_number" label={t("assetForm.serialNumber")} rules={[{ required: true, message: t("assetForm.serialRequired") }]}>
+              <Form.Item name="serial_number" label={t("assetForm.serialNumber")}>
                 <Input placeholder={t("assetForm.serialPlaceholder")} />
               </Form.Item>
             </Col>

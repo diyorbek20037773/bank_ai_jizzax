@@ -10,7 +10,7 @@ from app.schemas.branch import BranchResponse
 
 class AssetBase(BaseModel):
     name: str
-    serial_number: str
+    serial_number: str | None = None
     category_id: int
     description: str | None = None
     purchase_date: date | None = None

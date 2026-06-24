@@ -114,17 +114,22 @@ def create_asset(db: Session, data: dict, user_id: int | None = None) -> Asset:
     if not category:
         raise BadRequestException("Kategoriya topilmadi")
 
-    # Serial number uniqueness tekshiruvi
-    serial = data.get("serial_number")
-    if serial:
-        existing = db.query(Asset).filter(Asset.serial_number == serial).first()
-        if existing:
-            raise BadRequestException(
-                f"Bu seriya raqami allaqachon mavjud: {serial} "
-                f"(Aktiv: {existing.name}, Inventar: {existing.inventory_number})"
-            )
-
     inventory_number = generate_inventory_number(db, category.code)
+
+    # Seriya raqami IXTIYORIY — bo'sh qoldirilsa inventar raqamdan hosil qilamiz
+    # (DB da unique + not null, shuning uchun har doim qiymat bo'lishi shart)
+    serial = (data.get("serial_number") or "").strip()
+    if not serial:
+        serial = f"SN-{inventory_number}"
+    data["serial_number"] = serial
+
+    # Serial number uniqueness tekshiruvi
+    existing = db.query(Asset).filter(Asset.serial_number == serial).first()
+    if existing:
+        raise BadRequestException(
+            f"Bu seriya raqami allaqachon mavjud: {serial} "
+            f"(Aktiv: {existing.name}, Inventar: {existing.inventory_number})"
+        )
 
     asset = Asset(
         **data,
