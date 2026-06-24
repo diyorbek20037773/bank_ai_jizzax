@@ -13,6 +13,7 @@ import { getMyAssets, createRequest, getMyRequests, uploadPhoto } from "../api";
 import type { Asset } from "../types";
 import { STATUS_CONFIG } from "../utils/constants";
 import { useAuth } from "../context/AuthContext";
+import { useT } from "../i18n/I18nProvider";
 import dayjs from "dayjs";
 
 interface AssignmentHistory {
@@ -41,21 +42,22 @@ interface UserRequestItem {
   responded_at: string | null;
 }
 
-const REQUEST_TYPE_LABELS: Record<string, string> = {
-  STATUS_CHANGE: "Status o'zgartirish",
-  REPORT_LOST: "Yo'qolganini xabar berish",
-  REPORT_DAMAGE: "Shikastlanganini xabar berish",
-  OTHER: "Boshqa so'rov",
+const REQUEST_TYPE_LABEL_KEYS: Record<string, string> = {
+  STATUS_CHANGE: "myAssets.requestTypeStatusChange",
+  REPORT_LOST: "myAssets.requestTypeReportLost",
+  REPORT_DAMAGE: "myAssets.requestTypeReportDamage",
+  OTHER: "myAssets.requestTypeOther",
 };
 
-const REQUEST_STATUS_CONFIG: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
-  PENDING: { color: "orange", icon: <ClockCircleOutlined />, label: "Kutilmoqda" },
-  APPROVED: { color: "green", icon: <CheckCircleOutlined />, label: "Tasdiqlangan" },
-  REJECTED: { color: "red", icon: <CloseCircleOutlined />, label: "Rad etilgan" },
+const REQUEST_STATUS_CONFIG: Record<string, { color: string; icon: React.ReactNode; labelKey: string }> = {
+  PENDING: { color: "orange", icon: <ClockCircleOutlined />, labelKey: "myAssets.requestStatusPending" },
+  APPROVED: { color: "green", icon: <CheckCircleOutlined />, labelKey: "myAssets.requestStatusApproved" },
+  REJECTED: { color: "red", icon: <CloseCircleOutlined />, labelKey: "myAssets.requestStatusRejected" },
 };
 
 export default function MyAssets() {
   const navigate = useNavigate();
+  const { t } = useT();
   useAuth();
   const [currentAssets, setCurrentAssets] = useState<Asset[]>([]);
   const [history, setHistory] = useState<AssignmentHistory[]>([]);
@@ -97,9 +99,9 @@ export default function MyAssets() {
     try {
       const { data } = await uploadPhoto(file);
       setPhotoPath(data.path);
-      message.success("Rasm yuklandi");
+      message.success(t("myAssets.photoUploadSuccess"));
     } catch {
-      message.error("Rasm yuklanmadi");
+      message.error(t("myAssets.photoUploadError"));
     } finally {
       setUploading(false);
     }
@@ -108,7 +110,7 @@ export default function MyAssets() {
 
   const handleSubmitRequest = async () => {
     if (!requestType || !reason.trim()) {
-      message.warning("So'rov turi va sababni kiriting");
+      message.warning(t("myAssets.requestValidation"));
       return;
     }
     setSubmitting(true);
@@ -120,12 +122,12 @@ export default function MyAssets() {
         reason: reason.trim(),
         photo_path: photoPath || undefined,
       });
-      message.success("So'rov adminga yuborildi!");
+      message.success(t("myAssets.requestSuccess"));
       setRequestModal(false);
       resetForm();
       fetchRequests();
     } catch {
-      message.error("So'rov yuborilmadi");
+      message.error(t("myAssets.requestError"));
     } finally {
       setSubmitting(false);
     }
@@ -144,7 +146,7 @@ export default function MyAssets() {
     return (
       <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: 400, gap: 16 }}>
         <Spin size="large" />
-        <span style={{ fontSize: 13, color: "#8C8C8C", fontWeight: 450 }}>Aktivlaringiz yuklanmoqda...</span>
+        <span style={{ fontSize: 13, color: "#8C8C8C", fontWeight: 450 }}>{t("myAssets.loadingAssets")}</span>
       </div>
     );
   }
@@ -158,28 +160,28 @@ export default function MyAssets() {
           <div className="stat-card">
             <div className="stat-icon blue"><LaptopOutlined /></div>
             <div className="stat-value">{currentAssets.length}</div>
-            <div className="stat-label">Hozirgi aktivlar</div>
+            <div className="stat-label">{t("myAssets.statCurrent")}</div>
           </div>
         </Col>
         <Col xs={12} sm={6}>
           <div className="stat-card">
             <div className="stat-icon green"><HistoryOutlined /></div>
             <div className="stat-value">{history.length}</div>
-            <div className="stat-label">Jami tarix</div>
+            <div className="stat-label">{t("myAssets.statHistory")}</div>
           </div>
         </Col>
         <Col xs={12} sm={6}>
           <div className="stat-card">
             <div className="stat-icon orange"><ClockCircleOutlined /></div>
             <div className="stat-value">{myRequests.filter(r => r.status === "PENDING").length}</div>
-            <div className="stat-label">Kutilayotgan so'rovlar</div>
+            <div className="stat-label">{t("myAssets.statPending")}</div>
           </div>
         </Col>
         <Col xs={12} sm={6}>
           <div className="stat-card" style={{ cursor: "pointer" }} onClick={() => setRequestModal(true)}>
             <div className="stat-icon" style={{ background: "linear-gradient(135deg, #722ED1, #531DAB)" }}><PlusOutlined style={{ color: "#fff" }} /></div>
-            <div className="stat-value" style={{ fontSize: 14, color: "#722ED1" }}>Yangi</div>
-            <div className="stat-label">So'rov yuborish</div>
+            <div className="stat-value" style={{ fontSize: 14, color: "#722ED1" }}>{t("myAssets.statNew")}</div>
+            <div className="stat-label">{t("myAssets.statNewRequest")}</div>
           </div>
         </Col>
       </Row>
@@ -189,15 +191,15 @@ export default function MyAssets() {
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <LaptopOutlined style={{ color: "#0958D9" }} />
-            <span>Hozirda menga biriktirilgan aktivlar</span>
-            <Tag color="blue">{currentAssets.length} ta</Tag>
+            <span>{t("myAssets.currentSectionTitle")}</span>
+            <Tag color="blue">{t("myAssets.currentCount", { n: currentAssets.length })}</Tag>
           </div>
         }
         className="chart-card"
         style={{ marginBottom: 16 }}
       >
         {currentAssets.length === 0 ? (
-          <Empty description="Hozirda sizga biriktirilgan aktiv yo'q" />
+          <Empty description={t("myAssets.currentEmpty")} />
         ) : (
           <Table
             dataSource={currentAssets}
@@ -210,32 +212,32 @@ export default function MyAssets() {
             })}
             columns={[
               {
-                title: "Inventar №",
+                title: t("myAssets.colInventory"),
                 dataIndex: "inventory_number",
                 key: "inv",
                 render: (v: string) => <span style={{ fontWeight: 600, color: "#0958D9" }}>{v}</span>,
               },
-              { title: "Nomi", dataIndex: "name", key: "name" },
+              { title: t("common.name"), dataIndex: "name", key: "name" },
               {
-                title: "Kategoriya",
+                title: t("common.category"),
                 dataIndex: ["category", "name"],
                 key: "cat",
               },
               {
-                title: "Status",
+                title: t("common.status"),
                 dataIndex: "status",
                 key: "status",
                 render: (s: string) => (
                   <Tag color={STATUS_CONFIG[s]?.color} style={{ borderRadius: 6 }}>
-                    {STATUS_CONFIG[s]?.label || s}
+                    {STATUS_CONFIG[s] ? t(`common.statuses.${s}`) : s}
                   </Tag>
                 ),
               },
               {
-                title: "Narxi",
+                title: t("common.price"),
                 dataIndex: "purchase_price",
                 key: "price",
-                render: (v: number) => v ? `${Number(v).toLocaleString("ru-RU")} so'm` : "—",
+                render: (v: number) => v ? t("myAssets.priceFormat", { value: Number(v).toLocaleString("ru-RU") }) : "—",
               },
             ]}
           />
@@ -247,14 +249,14 @@ export default function MyAssets() {
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <SendOutlined style={{ color: "#722ED1" }} />
-            <span>Mening so'rovlarim</span>
+            <span>{t("myAssets.requestsSectionTitle")}</span>
             <Badge count={myRequests.filter(r => r.status === "PENDING").length} style={{ marginLeft: 4 }} />
           </div>
         }
         extra={
           <Button type="primary" icon={<PlusOutlined />} size="small" onClick={() => setRequestModal(true)}
             style={{ borderRadius: 6, background: "linear-gradient(135deg, #722ED1, #531DAB)" }}>
-            Yangi so'rov
+            {t("myAssets.newRequestBtn")}
           </Button>
         }
         className="chart-card"
@@ -263,7 +265,7 @@ export default function MyAssets() {
         {requestsLoading ? (
           <Spin size="small" />
         ) : myRequests.length === 0 ? (
-          <Empty description="Hali so'rov yuborilmagan" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          <Empty description={t("myAssets.requestsEmpty")} image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Timeline
             items={myRequests.slice(0, 10).map((req) => {
@@ -274,10 +276,10 @@ export default function MyAssets() {
                   <div style={{ padding: "4px 0" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
                       <Tag color={cfg.color} icon={cfg.icon} style={{ borderRadius: 6, fontSize: 11, margin: 0 }}>
-                        {cfg.label}
+                        {t(cfg.labelKey)}
                       </Tag>
                       <Tag style={{ borderRadius: 6, fontSize: 11, margin: 0 }}>
-                        {REQUEST_TYPE_LABELS[req.request_type] || req.request_type}
+                        {REQUEST_TYPE_LABEL_KEYS[req.request_type] ? t(REQUEST_TYPE_LABEL_KEYS[req.request_type]) : req.request_type}
                       </Tag>
                       <Typography.Text type="secondary" style={{ fontSize: 11 }}>
                         {dayjs(req.created_at).format("DD.MM.YYYY HH:mm")}
@@ -296,7 +298,7 @@ export default function MyAssets() {
                         border: `1px solid ${req.status === "APPROVED" ? "#B7EB8F" : "#FFCCC7"}`,
                         fontSize: 12,
                       }}>
-                        <strong>Admin javobi:</strong> {req.admin_response}
+                        <strong>{t("myAssets.adminResponse")}</strong> {req.admin_response}
                       </div>
                     )}
                   </div>
@@ -312,13 +314,13 @@ export default function MyAssets() {
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <HistoryOutlined style={{ color: "#722ED1" }} />
-            <span>Biriktirish tarixi</span>
+            <span>{t("myAssets.historySectionTitle")}</span>
           </div>
         }
         className="chart-card"
       >
         {history.length === 0 ? (
-          <Empty description="Tarix mavjud emas" />
+          <Empty description={t("myAssets.historyEmpty")} />
         ) : (
           <Table
             dataSource={history}
@@ -327,7 +329,7 @@ export default function MyAssets() {
             pagination={{ pageSize: 10 }}
             columns={[
               {
-                title: "Aktiv",
+                title: t("myAssets.colAsset"),
                 key: "asset",
                 render: (_: unknown, r: AssignmentHistory) => (
                   <div>
@@ -337,36 +339,36 @@ export default function MyAssets() {
                 ),
               },
               {
-                title: "Status",
+                title: t("common.status"),
                 dataIndex: "asset_status",
                 key: "status",
                 render: (s: string) => s ? (
                   <Tag color={STATUS_CONFIG[s]?.color} style={{ borderRadius: 6 }}>
-                    {STATUS_CONFIG[s]?.label || s}
+                    {STATUS_CONFIG[s] ? t(`common.statuses.${s}`) : s}
                   </Tag>
                 ) : "—",
               },
               {
-                title: "Berilgan",
+                title: t("myAssets.colAssigned"),
                 dataIndex: "assigned_at",
                 key: "assigned",
                 render: (v: string) => v ? dayjs(v).format("DD.MM.YYYY") : "—",
               },
               {
-                title: "Qaytarilgan",
+                title: t("myAssets.colReturned"),
                 dataIndex: "returned_at",
                 key: "returned",
                 render: (v: string) =>
-                  v ? dayjs(v).format("DD.MM.YYYY") : <Tag color="green" style={{ borderRadius: 6 }}>Hozirda</Tag>,
+                  v ? dayjs(v).format("DD.MM.YYYY") : <Tag color="green" style={{ borderRadius: 6 }}>{t("myAssets.nowAssigned")}</Tag>,
               },
               {
-                title: "Qaytarish sababi",
+                title: t("myAssets.colReturnReason"),
                 dataIndex: "return_reason",
                 key: "reason",
                 render: (v: string) => v || "—",
               },
               {
-                title: "Bo'lim",
+                title: t("myAssets.colDepartment"),
                 dataIndex: "department_name",
                 key: "dept",
                 render: (v: string) => v || "—",
@@ -381,31 +383,31 @@ export default function MyAssets() {
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <SendOutlined style={{ color: "#722ED1" }} />
-            <span>Adminga so'rov yuborish</span>
+            <span>{t("myAssets.modalTitle")}</span>
           </div>
         }
         open={requestModal}
         onOk={handleSubmitRequest}
         onCancel={() => { setRequestModal(false); resetForm(); }}
-        okText="Yuborish"
-        cancelText="Bekor qilish"
+        okText={t("myAssets.submitBtn")}
+        cancelText={t("common.cancel")}
         okButtonProps={{ loading: submitting, icon: <SendOutlined /> }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 8 }}>
           <div>
             <label style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, display: "block", color: "#434343" }}>
-              So'rov turi *
+              {t("myAssets.fieldRequestType")}
             </label>
             <Select
-              placeholder="Tanlang..."
+              placeholder={t("myAssets.requestTypePlaceholder")}
               style={{ width: "100%" }}
               value={requestType || undefined}
               onChange={(v) => { setRequestType(v); if (v === "REPORT_LOST") setSelectedAsset(undefined); }}
               options={[
-                { value: "REPORT_LOST", label: "Yo'qolganini xabar berish" },
-                { value: "REPORT_DAMAGE", label: "Shikastlanganini xabar berish" },
-                { value: "STATUS_CHANGE", label: "Status o'zgartirishni so'rash" },
-                { value: "OTHER", label: "Boshqa so'rov" },
+                { value: "REPORT_LOST", label: t("myAssets.requestTypeReportLost") },
+                { value: "REPORT_DAMAGE", label: t("myAssets.requestTypeReportDamage") },
+                { value: "STATUS_CHANGE", label: t("myAssets.requestTypeStatusChangeOption") },
+                { value: "OTHER", label: t("myAssets.requestTypeOther") },
               ]}
             />
           </div>
@@ -413,10 +415,10 @@ export default function MyAssets() {
           {currentAssets.length > 0 && (
             <div>
               <label style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, display: "block", color: "#434343" }}>
-                Aktiv {requestType === "REPORT_LOST" || requestType === "REPORT_DAMAGE" ? "*" : "(ixtiyoriy)"}
+                {requestType === "REPORT_LOST" || requestType === "REPORT_DAMAGE" ? t("myAssets.fieldAssetRequired") : t("myAssets.fieldAssetOptional")}
               </label>
               <Select
-                placeholder="Aktivni tanlang"
+                placeholder={t("myAssets.assetPlaceholder")}
                 allowClear
                 style={{ width: "100%" }}
                 value={selectedAsset}
@@ -431,15 +433,15 @@ export default function MyAssets() {
 
           <div>
             <label style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, display: "block", color: "#434343" }}>
-              Sabab / Izoh *
+              {t("myAssets.fieldReason")}
             </label>
             <Input.TextArea
               placeholder={
                 requestType === "REPORT_LOST"
-                  ? "Qachon va qayerda yo'qolganini tushuntiring..."
+                  ? t("myAssets.reasonPlaceholderLost")
                   : requestType === "REPORT_DAMAGE"
-                  ? "Shikastlanish haqida batafsil yozing..."
-                  : "So'rovingizni batafsil yozing..."
+                  ? t("myAssets.reasonPlaceholderDamage")
+                  : t("myAssets.reasonPlaceholderDefault")
               }
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -452,7 +454,7 @@ export default function MyAssets() {
             <div>
               <label style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, display: "block", color: "#434343" }}>
                 <ExclamationCircleOutlined style={{ color: "#FA8C16", marginRight: 4 }} />
-                Shikastlanish rasmi (tavsiya etiladi)
+                {t("myAssets.fieldDamagePhoto")}
               </label>
               <Upload
                 beforeUpload={(file) => { handleUpload(file); return false; }}
@@ -461,12 +463,12 @@ export default function MyAssets() {
                 showUploadList={photoPath ? true : false}
               >
                 <Button icon={<UploadOutlined />} loading={uploading}>
-                  {photoPath ? "Boshqa rasm yuklash" : "Rasm yuklash"}
+                  {photoPath ? t("myAssets.uploadAnotherPhoto") : t("myAssets.uploadPhoto")}
                 </Button>
               </Upload>
               {photoPath && (
                 <Tag color="green" style={{ marginTop: 6, borderRadius: 6 }}>
-                  <CheckCircleOutlined /> Rasm yuklandi
+                  <CheckCircleOutlined /> {t("myAssets.photoUploaded")}
                 </Tag>
               )}
             </div>
@@ -479,8 +481,7 @@ export default function MyAssets() {
               fontSize: 12.5, color: "#CF1322",
             }}>
               <ExclamationCircleOutlined style={{ marginRight: 6 }} />
-              Yo'qolgan aktiv xabar berilgandan keyin admin tomonidan tekshiriladi.
-              Rasm qo'shish shart emas.
+              {t("myAssets.lostNotice")}
             </div>
           )}
         </div>

@@ -5,8 +5,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { getAssets, getCategories, getDepartments, getBranches, deleteAsset } from "../api";
 import type { Asset, Category, Department, Branch } from "../types";
 import { STATUS_CONFIG } from "../utils/constants";
+import { useT } from "../i18n/I18nProvider";
 
 export default function AssetList() {
+  const { t } = useT();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -49,16 +51,16 @@ export default function AssetList() {
   const handleDelete = async (id: number) => {
     try {
       await deleteAsset(id);
-      message.success("Aktiv hisobdan chiqarildi");
+      message.success(t("assets.deletedSuccess"));
       fetchAssets();
     } catch (e: any) {
-      message.error(e.response?.data?.detail || "Xatolik yuz berdi");
+      message.error(e.response?.data?.detail || t("assets.deleteError"));
     }
   };
 
   const columns = [
     {
-      title: "Inventar №",
+      title: t("assets.inventoryNumber"),
       dataIndex: "inventory_number",
       key: "inventory_number",
       width: 180,
@@ -66,32 +68,32 @@ export default function AssetList() {
         <a onClick={() => navigate(`/assets/${r.id}`)} style={{ fontWeight: 600 }}>{v}</a>
       ),
     },
-    { title: "Nomi", dataIndex: "name", key: "name", ellipsis: true },
+    { title: t("common.name"), dataIndex: "name", key: "name", ellipsis: true },
     {
-      title: "Kategoriya",
+      title: t("common.category"),
       dataIndex: ["category", "name"],
       key: "category",
       width: 140,
     },
     {
-      title: "Status",
+      title: t("common.status"),
       dataIndex: "status",
       key: "status",
       width: 160,
       render: (s: string) => {
         const cfg = STATUS_CONFIG[s];
-        return <Tag color={cfg?.color} style={{ borderRadius: 6 }}>{cfg?.label || s}</Tag>;
+        return <Tag color={cfg?.color} style={{ borderRadius: 6 }}>{cfg ? t(`common.statuses.${s}`) : s}</Tag>;
       },
     },
     {
-      title: "Xodim",
+      title: t("assets.employee"),
       dataIndex: ["current_employee", "full_name"],
       key: "employee",
       width: 160,
       render: (v: string) => v || <span style={{ color: "#bfbfbf" }}>—</span>,
     },
     {
-      title: "Bo'lim",
+      title: t("assets.department"),
       dataIndex: ["current_department", "name"],
       key: "department",
       width: 140,
@@ -103,21 +105,21 @@ export default function AssetList() {
       width: 120,
       render: (_: unknown, record: Asset) => (
         <div style={{ display: "flex", gap: 4 }}>
-          <Tooltip title="Ko'rish">
+          <Tooltip title={t("common.view")}>
             <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/assets/${record.id}`)} />
           </Tooltip>
-          <Tooltip title="Tahrirlash">
+          <Tooltip title={t("common.edit")}>
             <Button type="text" size="small" icon={<EditOutlined />} onClick={() => navigate(`/assets/${record.id}/edit`)} />
           </Tooltip>
           <Popconfirm
-            title="Aktivni hisobdan chiqarish"
-            description="Haqiqatan ham bu aktivni hisobdan chiqarmoqchimisiz?"
+            title={t("assets.deleteTitle")}
+            description={t("assets.deleteConfirm")}
             onConfirm={() => handleDelete(record.id)}
-            okText="Ha, chiqarish"
-            cancelText="Bekor qilish"
+            okText={t("assets.deleteOk")}
+            cancelText={t("common.cancel")}
             okButtonProps={{ danger: true }}
           >
-            <Tooltip title="Hisobdan chiqarish">
+            <Tooltip title={t("assets.deleteTooltip")}>
               <Button type="text" size="small" danger icon={<DeleteOutlined />} />
             </Tooltip>
           </Popconfirm>
@@ -132,7 +134,7 @@ export default function AssetList() {
         <Row gutter={[14, 14]} align="middle">
           <Col xs={24} sm={8} md={6}>
             <Input
-              placeholder="Qidirish..."
+              placeholder={t("assets.searchPlaceholder")}
               prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
               allowClear
               onChange={(e) => { setPage(1); setFilters((f) => ({ ...f, search: e.target.value || undefined })); }}
@@ -140,7 +142,7 @@ export default function AssetList() {
           </Col>
           <Col xs={12} sm={8} md={5}>
             <Select
-              placeholder="Kategoriya"
+              placeholder={t("common.category")}
               allowClear
               style={{ width: "100%" }}
               onChange={(v) => { setPage(1); setFilters((f) => ({ ...f, category_id: v })); }}
@@ -149,7 +151,7 @@ export default function AssetList() {
           </Col>
           <Col xs={12} sm={8} md={5}>
             <Select
-              placeholder="Status"
+              placeholder={t("common.status")}
               allowClear
               style={{ width: "100%" }}
               value={(filters.status as string) || undefined}
@@ -163,12 +165,12 @@ export default function AssetList() {
                   setSearchParams({});
                 }
               }}
-              options={Object.entries(STATUS_CONFIG).map(([k, v]) => ({ value: k, label: v.label }))}
+              options={Object.keys(STATUS_CONFIG).map((k) => ({ value: k, label: t(`common.statuses.${k}`) }))}
             />
           </Col>
           <Col xs={12} sm={8} md={4}>
             <Select
-              placeholder="Bo'lim"
+              placeholder={t("assets.department")}
               allowClear
               showSearch
               optionFilterProp="label"
@@ -179,7 +181,7 @@ export default function AssetList() {
           </Col>
           <Col xs={12} sm={8} md={4}>
             <Select
-              placeholder="Filial"
+              placeholder={t("assets.branch")}
               allowClear
               style={{ width: "100%" }}
               onChange={(v) => { setPage(1); setFilters((f) => ({ ...f, branch_id: v })); }}
@@ -188,7 +190,7 @@ export default function AssetList() {
           </Col>
           <Col xs={24} sm={8} md={4} style={{ display: "flex", justifyContent: "flex-end", marginLeft: "auto" }}>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/assets/new")}>
-              Yangi aktiv
+              {t("assets.newAsset")}
             </Button>
           </Col>
         </Row>
@@ -206,7 +208,7 @@ export default function AssetList() {
           pageSize,
           total,
           showSizeChanger: true,
-          showTotal: (t) => `Jami: ${t} ta`,
+          showTotal: (count) => t("assets.totalCount", { n: count }),
           onChange: (p, ps) => { setPage(p); setPageSize(ps); },
         }}
       />

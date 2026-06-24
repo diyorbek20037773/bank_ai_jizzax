@@ -6,8 +6,10 @@ import { useNavigate } from "react-router-dom";
 import { qrLookup, getAssets } from "../api";
 import type { Asset } from "../types";
 import { STATUS_CONFIG, STATUS_COLORS, API_BASE } from "../utils/constants";
+import { useT } from "../i18n/I18nProvider";
 
 export default function QRScanPage() {
+  const { t } = useT();
   const navigate = useNavigate();
   const [scanning, setScanning] = useState(false);
   const [manualInput, setManualInput] = useState("");
@@ -29,11 +31,11 @@ export default function QRScanPage() {
 
     try {
       const { data } = await qrLookup(invNum);
-      message.success(`Aktiv topildi: ${data.name}`);
+      message.success(t("qr.assetFound", { name: data.name }));
       stopScanning();
       setFoundAsset(data);
     } catch {
-      message.error("Aktiv topilmadi");
+      message.error(t("qr.assetNotFound"));
     }
   };
 
@@ -51,7 +53,7 @@ export default function QRScanPage() {
       );
       setScanning(true);
     } catch {
-      message.error("Kameraga ruxsat berilmadi yoki kamera topilmadi");
+      message.error(t("qr.cameraError"));
     }
   };
 
@@ -74,20 +76,20 @@ export default function QRScanPage() {
     if (!manualInput.trim()) return;
     try {
       const { data } = await qrLookup(manualInput.trim());
-      message.success(`Aktiv topildi: ${data.name}`);
+      message.success(t("qr.assetFound", { name: data.name }));
       setFoundAsset(data);
     } catch {
-      message.error("Aktiv topilmadi");
+      message.error(t("qr.assetNotFound"));
     }
   };
 
   const handleSampleClick = async (asset: Asset) => {
     try {
       const { data } = await qrLookup(asset.inventory_number);
-      message.success(`Aktiv topildi: ${data.name}`);
+      message.success(t("qr.assetFound", { name: data.name }));
       setFoundAsset(data);
     } catch {
-      message.error("Aktiv topilmadi");
+      message.error(t("qr.assetNotFound"));
     }
   };
 
@@ -104,18 +106,18 @@ export default function QRScanPage() {
                 <ScanOutlined />
               </div>
               <Typography.Title level={5} style={{ marginBottom: 8, color: "#141414" }}>
-                QR Kod Skanerlang
+                {t("qr.scanTitle")}
               </Typography.Title>
               <Typography.Paragraph style={{ color: "#8C8C8C", marginBottom: 24 }}>
-                Aktivning QR kodini skanerlash uchun kamerani yoqing
+                {t("qr.scanPrompt")}
               </Typography.Paragraph>
               <Button type="primary" size="large" icon={<ScanOutlined />} onClick={startScanning}>
-                Kamerani yoqish
+                {t("qr.startCamera")}
               </Button>
             </div>
           ) : scanning ? (
             <div style={{ textAlign: "center", padding: "16px 24px" }}>
-              <Button danger onClick={stopScanning}>Kamerani o'chirish</Button>
+              <Button danger onClick={stopScanning}>{t("qr.stopCamera")}</Button>
             </div>
           ) : null}
 
@@ -152,13 +154,13 @@ export default function QRScanPage() {
                     </div>
 
                     <Descriptions column={1} size="small" style={{ marginBottom: 12 }}>
-                      <Descriptions.Item label="Inventar raqam">
+                      <Descriptions.Item label={t("qr.inventoryNumber")}>
                         <span style={{ fontWeight: 600, color: "#0958D9" }}>{foundAsset.inventory_number}</span>
                       </Descriptions.Item>
-                      <Descriptions.Item label="Kategoriya">
+                      <Descriptions.Item label={t("common.category")}>
                         {foundAsset.category?.name || "—"}
                       </Descriptions.Item>
-                      <Descriptions.Item label="Seriya raqami">
+                      <Descriptions.Item label={t("qr.serialNumber")}>
                         {foundAsset.serial_number}
                       </Descriptions.Item>
                     </Descriptions>
@@ -170,7 +172,7 @@ export default function QRScanPage() {
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                         <UserOutlined style={{ color: foundAsset.current_employee ? "#52C41A" : "#FA8C16" }} />
                         <Typography.Text strong style={{ fontSize: 13 }}>
-                          {foundAsset.current_employee ? "Hozirgi egasi" : "Biriktirilmagan"}
+                          {foundAsset.current_employee ? t("qr.currentOwner") : t("qr.notAssigned")}
                         </Typography.Text>
                       </div>
                       {foundAsset.current_employee ? (
@@ -197,17 +199,17 @@ export default function QRScanPage() {
                         </div>
                       ) : (
                         <div style={{ paddingLeft: 24, fontSize: 13, color: "#8C8C8C" }}>
-                          Aktiv hozirda hech kimga biriktirilmagan
+                          {t("qr.notAssignedDesc")}
                         </div>
                       )}
                     </div>
 
                     <div style={{ display: "flex", gap: 8 }}>
                       <Button type="primary" icon={<ArrowRightOutlined />} onClick={() => navigate(`/assets/${foundAsset.id}`)}>
-                        Batafsil ko'rish
+                        {t("qr.viewDetails")}
                       </Button>
                       <Button onClick={() => { setFoundAsset(null); setManualInput(""); }}>
-                        Qayta skanerlash
+                        {t("qr.rescan")}
                       </Button>
                     </div>
                   </div>
@@ -218,7 +220,7 @@ export default function QRScanPage() {
 
           <div className="qr-manual-section">
             <Typography.Text style={{ fontSize: 13, color: "#8C8C8C" }}>
-              Yoki inventar raqamini qo'lda kiriting:
+              {t("qr.manualLabel")}
             </Typography.Text>
             <Space.Compact style={{ width: "100%", marginTop: 8 }}>
               <Input
@@ -228,7 +230,7 @@ export default function QRScanPage() {
                 onPressEnter={handleManualSearch}
               />
               <Button type="primary" icon={<SearchOutlined />} onClick={handleManualSearch}>
-                Qidirish
+                {t("common.search")}
               </Button>
             </Space.Compact>
           </div>
@@ -238,10 +240,10 @@ export default function QRScanPage() {
         <div style={{ marginTop: 20 }}>
           <Typography.Text strong style={{ fontSize: 13, color: "#141414" }}>
             <ScanOutlined style={{ marginRight: 6, color: "#0958D9" }} />
-            Namuna QR kodlar
+            {t("qr.sampleTitle")}
           </Typography.Text>
           <div style={{ color: "#8C8C8C", fontSize: 12, marginTop: 4, marginBottom: 12 }}>
-            QR kodlardan birini bosing — tizim aktivni topib ko'rsatadi
+            {t("qr.sampleHint")}
           </div>
 
           {samplesLoading ? (

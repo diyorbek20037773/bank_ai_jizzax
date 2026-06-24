@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ConfigProvider } from "antd";
+import { ConfigProvider, theme as antdTheme } from "antd";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { I18nProvider } from "./i18n/I18nProvider";
 import AppLayout from "./components/layout/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -62,10 +64,11 @@ function AppRoutes() {
   );
 }
 
-const bankingTheme = {
+const buildTheme = (dark: boolean) => ({
+  algorithm: dark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
   token: {
-    colorPrimary: "#0958D9",
-    colorInfo: "#0958D9",
+    colorPrimary: "#1677FF",
+    colorInfo: "#1677FF",
     colorSuccess: "#52C41A",
     colorWarning: "#FAAD14",
     colorError: "#FF4D4F",
@@ -74,16 +77,9 @@ const bankingTheme = {
     borderRadius: 10,
     borderRadiusLG: 14,
     borderRadiusSM: 6,
-    colorBgLayout: "#F0F2F5",
-    colorText: "#141414",
-    colorTextSecondary: "#595959",
-    colorTextTertiary: "#8C8C8C",
-    colorBorder: "#E8E8E8",
-    colorBorderSecondary: "#F0F0F0",
+    colorBgLayout: dark ? "#0A0A0A" : "#F0F2F5",
     controlHeight: 40,
     controlHeightLG: 48,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04)",
-    boxShadowSecondary: "0 4px 6px -2px rgba(0,0,0,0.05), 0 10px 20px -2px rgba(0,0,0,0.06)",
     motion: true,
     motionDurationFast: "0.15s",
     motionDurationMid: "0.25s",
@@ -94,8 +90,8 @@ const bankingTheme = {
   components: {
     Layout: {
       siderBg: "#001529",
-      headerBg: "#FFFFFF",
-      bodyBg: "#F0F2F5",
+      headerBg: dark ? "#1A1A1A" : "#FFFFFF",
+      bodyBg: dark ? "#0A0A0A" : "#F0F2F5",
       headerHeight: 64,
     },
     Menu: {
@@ -107,62 +103,46 @@ const bankingTheme = {
       itemBorderRadius: 10,
       itemMarginBlock: 3,
     },
-    Card: {
-      borderRadiusLG: 14,
-      paddingLG: 24,
-    },
-    Button: {
-      borderRadius: 10,
-      fontWeight: 500,
-      controlHeight: 40,
-    },
-    Input: {
-      borderRadius: 10,
-      controlHeight: 40,
-    },
+    Card: { borderRadiusLG: 14, paddingLG: 24 },
+    Button: { borderRadius: 10, fontWeight: 500, controlHeight: 40 },
+    Input: { borderRadius: 10, controlHeight: 40 },
     Table: {
-      headerBg: "#FAFBFC",
-      headerColor: "#8C8C8C",
-      rowHoverBg: "#F0F7FF",
-      borderColor: "#F5F5F5",
+      headerBg: dark ? "#1D1D1D" : "#FAFBFC",
+      headerColor: dark ? "#9A9A9A" : "#8C8C8C",
+      rowHoverBg: dark ? "rgba(22,119,255,0.10)" : "#F0F7FF",
+      borderColor: dark ? "#2A2A2A" : "#F5F5F5",
       headerBorderRadius: 10,
       cellPaddingBlock: 14,
     },
-    Select: {
-      borderRadius: 10,
-    },
-    Modal: {
-      borderRadiusLG: 18,
-    },
-    Statistic: {
-      titleFontSize: 13,
-      contentFontSize: 28,
-    },
-    Tag: {
-      borderRadiusSM: 6,
-    },
-    Tabs: {
-      inkBarColor: "#0958D9",
-      itemActiveColor: "#0958D9",
-      itemSelectedColor: "#0958D9",
-    },
-    Tooltip: {
-      borderRadius: 8,
-    },
-    Popover: {
-      borderRadiusLG: 14,
-    },
+    Select: { borderRadius: 10 },
+    Modal: { borderRadiusLG: 18 },
+    Statistic: { titleFontSize: 13, contentFontSize: 28 },
+    Tag: { borderRadiusSM: 6 },
+    Tabs: { inkBarColor: "#1677FF", itemActiveColor: "#1677FF", itemSelectedColor: "#1677FF" },
+    Tooltip: { borderRadius: 8 },
+    Popover: { borderRadiusLG: 14 },
   },
-};
+});
 
-export default function App() {
+function ThemedApp() {
+  const { mode } = useTheme();
   return (
-    <ConfigProvider theme={bankingTheme}>
+    <ConfigProvider theme={buildTheme(mode === "dark")}>
       <AuthProvider>
         <BrowserRouter>
           <AppRoutes />
         </BrowserRouter>
       </AuthProvider>
     </ConfigProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <I18nProvider>
+        <ThemedApp />
+      </I18nProvider>
+    </ThemeProvider>
   );
 }

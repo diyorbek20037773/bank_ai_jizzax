@@ -1,30 +1,33 @@
 import { useState } from "react";
-import { Form, Input, Button, message } from "antd";
-import { UserOutlined, LockOutlined, SafetyOutlined } from "@ant-design/icons";
+import { Form, Input, Button, message, Select } from "antd";
+import { UserOutlined, LockOutlined, SafetyOutlined, GlobalOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useT } from "../i18n/I18nProvider";
+import { LANGS, LANG_LABELS, type Lang } from "../i18n/resources";
 import { login as loginApi } from "../api";
-
-const demoUsers = [
-  { username: "admin", password: "admin123", role: "Admin", color: "#FF4D4F" },
-  { username: "user", password: "user123", role: "Xodim", color: "#52C41A" },
-];
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t, lang, setLang } = useT();
   const [form] = Form.useForm();
+
+  const demoUsers = [
+    { username: "admin", password: "admin123", role: t("login.roleAdmin"), color: "#FF4D4F" },
+    { username: "user", password: "user123", role: t("login.roleUser"), color: "#52C41A" },
+  ];
 
   const onFinish = async (values: { username: string; password: string }) => {
     setLoading(true);
     try {
       const { data } = await loginApi(values.username, values.password);
       login(data.access_token, data.user);
-      message.success(`Xush kelibsiz, ${data.user.full_name}!`);
+      message.success(`${t("login.welcome")}, ${data.user.full_name}!`);
       navigate("/");
     } catch {
-      message.error("Login yoki parol noto'g'ri");
+      message.error(t("login.invalidCredentials"));
     } finally {
       setLoading(false);
     }
@@ -41,31 +44,42 @@ export default function Login() {
       <div className="login-orb login-orb-2" />
       <div className="login-orb login-orb-3" />
 
+      <div className="login-lang-switch">
+        <Select
+          value={lang}
+          onChange={(l) => setLang(l as Lang)}
+          variant="borderless"
+          suffixIcon={<GlobalOutlined style={{ color: "rgba(255,255,255,0.55)" }} />}
+          popupMatchSelectWidth={false}
+          options={LANGS.map((l) => ({ value: l, label: LANG_LABELS[l] }))}
+        />
+      </div>
+
       <div className="login-card">
         <div className="login-card-header">
           <div className="login-card-icon">
             <SafetyOutlined />
           </div>
-          <h2>Bankir AI</h2>
-          <p>AI bilan bank aktivlarini boshqarish tizimi</p>
+          <h2>{t("common.appName")}</h2>
+          <p>{t("login.subtitle")}</p>
         </div>
 
         <Form form={form} onFinish={onFinish} autoComplete="off" className="login-form">
-          <Form.Item name="username" rules={[{ required: true, message: "Login kiriting" }]}>
-            <Input prefix={<UserOutlined />} placeholder="Login" />
+          <Form.Item name="username" rules={[{ required: true, message: t("login.usernameRequired") }]}>
+            <Input prefix={<UserOutlined />} placeholder={t("login.username")} />
           </Form.Item>
-          <Form.Item name="password" rules={[{ required: true, message: "Parol kiriting" }]}>
-            <Input.Password prefix={<LockOutlined />} placeholder="Parol" />
+          <Form.Item name="password" rules={[{ required: true, message: t("login.passwordRequired") }]}>
+            <Input.Password prefix={<LockOutlined />} placeholder={t("login.password")} />
           </Form.Item>
           <Form.Item style={{ marginBottom: 0 }}>
             <Button type="primary" htmlType="submit" loading={loading} block>
-              Tizimga kirish
+              {t("login.loginBtn")}
             </Button>
           </Form.Item>
         </Form>
 
         <div className="demo-divider">
-          <span>Tezkor kirish</span>
+          <span>{t("login.quickLogin")}</span>
         </div>
 
         <div className="demo-buttons">

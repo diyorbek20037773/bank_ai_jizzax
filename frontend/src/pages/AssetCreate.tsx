@@ -11,8 +11,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { createAsset, updateAsset, getAsset, getCategories, uploadPhoto, aiSuggestCategory, aiAutoFill } from "../api";
 import type { Category } from "../types";
 import dayjs from "dayjs";
+import { useT } from "../i18n/I18nProvider";
 
 export default function AssetForm() {
+  const { t } = useT();
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
   const navigate = useNavigate();
@@ -60,14 +62,14 @@ export default function AssetForm() {
       };
       if (isEdit) {
         await updateAsset(+id, data);
-        message.success("Aktiv yangilandi");
+        message.success(t("assetForm.updated"));
       } else {
         await createAsset(data);
-        message.success("Aktiv yaratildi");
+        message.success(t("assetForm.created"));
       }
       navigate("/assets");
     } catch (e: any) {
-      message.error(e.response?.data?.detail || "Xatolik yuz berdi");
+      message.error(e.response?.data?.detail || t("assetForm.genericError"));
     } finally {
       setLoading(false);
     }
@@ -77,9 +79,9 @@ export default function AssetForm() {
     try {
       const { data } = await uploadPhoto(file);
       setPhotoPath(data.path);
-      message.success("Rasm yuklandi");
+      message.success(t("assetForm.photoUploaded"));
     } catch {
-      message.error("Rasm yuklashda xatolik");
+      message.error(t("assetForm.photoUploadError"));
     }
     return false;
   };
@@ -88,7 +90,7 @@ export default function AssetForm() {
     const name = form.getFieldValue("name");
     const description = form.getFieldValue("description");
     if (!name?.trim()) {
-      message.warning("Avval aktiv nomini kiriting");
+      message.warning(t("assetForm.enterNameFirst"));
       return;
     }
     setAiLoading(true);
@@ -97,10 +99,10 @@ export default function AssetForm() {
       setAiSuggestion(data);
       if (data.category_id) {
         form.setFieldValue("category_id", data.category_id);
-        message.success(`AI tavsiyasi: ${data.category_name} (${data.confidence}%)`);
+        message.success(t("assetForm.aiSuggestion", { category: data.category_name, confidence: data.confidence }));
       }
     } catch {
-      message.info("AI xizmati hozircha mavjud emas");
+      message.info(t("assetForm.aiUnavailable"));
     } finally {
       setAiLoading(false);
     }
@@ -109,7 +111,7 @@ export default function AssetForm() {
   const handleAutoFill = async () => {
     const name = form.getFieldValue("name");
     if (!name?.trim()) {
-      message.warning("Avval aktiv nomini kiriting");
+      message.warning(t("assetForm.enterNameFirst"));
       return;
     }
     setAutoFillLoading(true);
@@ -129,9 +131,9 @@ export default function AssetForm() {
         form.setFieldValue("purchase_price", data.estimated_price_uzs);
       }
 
-      message.success(`AI ${data.confidence}% ishonch bilan maydonlarni to'ldirdi`);
+      message.success(t("assetForm.aiFilledFields", { confidence: data.confidence }));
     } catch {
-      message.info("AI xizmati hozircha mavjud emas");
+      message.info(t("assetForm.aiUnavailable"));
     } finally {
       setAutoFillLoading(false);
     }
@@ -143,14 +145,14 @@ export default function AssetForm() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/assets")} />
           <Typography.Title level={4} style={{ margin: 0 }}>
-            {isEdit ? "Aktivni tahrirlash" : "Yangi aktiv"}
+            {isEdit ? t("assetForm.editTitle") : t("assetForm.createTitle")}
           </Typography.Title>
         </div>
         {!isEdit && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <RobotOutlined style={{ color: aiEnabled ? "#722ED1" : "#D9D9D9", fontSize: 16 }} />
             <Typography.Text style={{ fontSize: 13, color: aiEnabled ? "#531DAB" : "#8C8C8C" }}>
-              AI yordamchi
+              {t("assetForm.aiAssistant")}
             </Typography.Text>
             <Switch
               size="small"
@@ -185,10 +187,10 @@ export default function AssetForm() {
               </div>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13, color: "#531DAB" }}>
-                  AI avtomatik to'ldirish
+                  {t("assetForm.aiAutoFillTitle")}
                 </div>
                 <div style={{ fontSize: 11, color: "#8C8C8C" }}>
-                  Aktiv nomini kiriting — AI qolgan maydonlarni to'ldiradi
+                  {t("assetForm.aiAutoFillHint")}
                 </div>
               </div>
             </div>
@@ -203,7 +205,7 @@ export default function AssetForm() {
                 borderRadius: 8,
               }}
             >
-              AI bilan to'ldirish
+              {t("assetForm.aiAutoFillBtn")}
             </Button>
           </div>
 
@@ -216,7 +218,7 @@ export default function AssetForm() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                 <CheckCircleOutlined style={{ color: "#52C41A" }} />
                 <Typography.Text strong style={{ fontSize: 12, color: "#531DAB" }}>
-                  {autoFillResult.confidence}% ishonch bilan to'ldirildi
+                  {t("assetForm.filledWithConfidence", { confidence: autoFillResult.confidence })}
                 </Typography.Text>
                 <Progress
                   percent={autoFillResult.confidence}
@@ -238,24 +240,24 @@ export default function AssetForm() {
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Row gutter={24}>
             <Col xs={24} md={12}>
-              <Form.Item name="name" label="Nomi" rules={[{ required: true, message: "Nom kiriting" }]}>
-                <Input placeholder="Masalan: Dell Latitude 5540" />
+              <Form.Item name="name" label={t("common.name")} rules={[{ required: true, message: t("assetForm.nameRequired") }]}>
+                <Input placeholder={t("assetForm.namePlaceholder")} />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="serial_number" label="Seriya raqami" rules={[{ required: true, message: "Seriya raqami kiriting" }]}>
-                <Input placeholder="Masalan: DELL-LAT-12345" />
+              <Form.Item name="serial_number" label={t("assetForm.serialNumber")} rules={[{ required: true, message: t("assetForm.serialRequired") }]}>
+                <Input placeholder={t("assetForm.serialPlaceholder")} />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={24}>
             <Col xs={24} md={12}>
-              <Form.Item label="Kategoriya" required>
+              <Form.Item label={t("common.category")} required>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <Form.Item name="category_id" noStyle rules={[{ required: true, message: "Kategoriya tanlang" }]}>
+                  <Form.Item name="category_id" noStyle rules={[{ required: true, message: t("assetForm.categoryRequired") }]}>
                     <Select
-                      placeholder="Kategoriya tanlang"
+                      placeholder={t("assetForm.categoryPlaceholder")}
                       showSearch
                       optionFilterProp="label"
                       style={{ flex: 1 }}
@@ -267,7 +269,7 @@ export default function AssetForm() {
                       icon={<RobotOutlined />}
                       loading={aiLoading}
                       onClick={handleAiSuggest}
-                      title="AI orqali kategoriyani aniqlash"
+                      title={t("assetForm.aiCategoryTooltip")}
                       style={{ borderColor: "#722ED1", color: "#722ED1" }}
                     >
                       AI
@@ -287,7 +289,7 @@ export default function AssetForm() {
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="purchase_price" label="Narxi (so'm)">
+              <Form.Item name="purchase_price" label={t("assetForm.priceLabel")}>
                 <InputNumber
                   style={{ width: "100%" }}
                   min={0}
@@ -298,37 +300,37 @@ export default function AssetForm() {
             </Col>
           </Row>
 
-          <Form.Item name="description" label="Tavsif">
-            <Input.TextArea rows={3} placeholder="Qo'shimcha ma'lumot..." />
+          <Form.Item name="description" label={t("assetForm.description")}>
+            <Input.TextArea rows={3} placeholder={t("assetForm.descriptionPlaceholder")} />
           </Form.Item>
 
           <Row gutter={24}>
             <Col xs={24} md={12}>
-              <Form.Item name="purchase_date" label="Sotib olingan sana">
+              <Form.Item name="purchase_date" label={t("assetForm.purchaseDate")}>
                 <DatePicker style={{ width: "100%" }} />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="warranty_expiry" label="Kafolat muddati">
+              <Form.Item name="warranty_expiry" label={t("assetForm.warrantyExpiry")}>
                 <DatePicker style={{ width: "100%" }} />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item name="notes" label="Izoh">
+          <Form.Item name="notes" label={t("assetForm.notes")}>
             <Input.TextArea rows={2} />
           </Form.Item>
 
-          <Form.Item label="Rasm">
+          <Form.Item label={t("assetForm.photo")}>
             <Upload
               beforeUpload={handleUpload}
               maxCount={1}
               accept="image/*"
               showUploadList={false}
             >
-              <Button icon={<UploadOutlined />}>Rasm yuklash</Button>
+              <Button icon={<UploadOutlined />}>{t("assetForm.uploadPhoto")}</Button>
             </Upload>
-            {photoPath && <Typography.Text type="success" style={{ marginLeft: 12 }}>Rasm yuklangan</Typography.Text>}
+            {photoPath && <Typography.Text type="success" style={{ marginLeft: 12 }}>{t("assetForm.photoUploadedLabel")}</Typography.Text>}
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, paddingTop: 8, borderTop: "1px solid #f0f0f0" }}>
@@ -339,7 +341,7 @@ export default function AssetForm() {
               icon={isEdit ? <SaveOutlined /> : <PlusOutlined />}
               size="large"
             >
-              {isEdit ? "Saqlash" : "Yaratish"}
+              {isEdit ? t("common.save") : t("common.create")}
             </Button>
           </Form.Item>
         </Form>

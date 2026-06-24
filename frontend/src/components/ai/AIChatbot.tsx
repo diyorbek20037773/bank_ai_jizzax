@@ -5,6 +5,7 @@ import {
   BulbOutlined,
 } from "@ant-design/icons";
 import { aiChat } from "../../api";
+import { useT } from "../../i18n/I18nProvider";
 
 type ChatMessage = {
   role: "user" | "ai";
@@ -13,16 +14,17 @@ type ChatMessage = {
   time: string;
 };
 
-const QUICK_QUESTIONS = [
-  "Jami nechta aktiv bor?",
-  "Qaysi bo'limda eng ko'p aktiv bor?",
-  "Ta'mirda turgan barcha aktivlar ro'yxati",
-  "O'tgan oy bilan solishtirganda holat qanday?",
-  "Kafolati tugayotgan aktivlar bormi?",
-  "IT bo'limida qancha aktiv bor?",
+const QUICK_QUESTION_KEYS = [
+  "ai.q.totalAssets",
+  "ai.q.topDepartment",
+  "ai.q.inRepair",
+  "ai.q.monthCompare",
+  "ai.q.warrantyExpiring",
+  "ai.q.itDepartment",
 ];
 
 export default function AIChatbot() {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -64,7 +66,7 @@ export default function AIChatbot() {
       const { data } = await aiChat(text.trim());
       const aiMsg: ChatMessage = {
         role: "ai",
-        text: data.answer || "Javob olishda xatolik yuz berdi",
+        text: data.answer || t("ai.answerError"),
         suggestions: data.suggestions || [],
         time: getTimeStr(),
       };
@@ -73,7 +75,7 @@ export default function AIChatbot() {
     } catch (e: any) {
       const errorMsg: ChatMessage = {
         role: "ai",
-        text: e.response?.data?.detail || "AI xizmati hozircha mavjud emas. Keyinroq urinib ko'ring.",
+        text: e.response?.data?.detail || t("ai.serviceUnavailable"),
         time: getTimeStr(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -146,7 +148,7 @@ export default function AIChatbot() {
                 color: "#fff", fontSize: 14, fontWeight: 600,
                 letterSpacing: "0.01em", whiteSpace: "nowrap",
               }}>
-                AI Yordamchi
+                {t("ai.assistant")}
               </span>
             </div>
           </Badge>
@@ -202,10 +204,10 @@ export default function AIChatbot() {
               </div>
               <div>
                 <div style={{ color: "#fff", fontWeight: 600, fontSize: 15, lineHeight: 1.2 }}>
-                  AI Yordamchi
+                  {t("ai.assistant")}
                 </div>
                 <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>
-                  Bank aktivlari bo'yicha savol bering
+                  {t("ai.assistantSubtitle")}
                 </div>
               </div>
             </div>
@@ -248,13 +250,15 @@ export default function AIChatbot() {
                   <RobotOutlined style={{ fontSize: 28, color: "#722ED1" }} />
                 </div>
                 <Typography.Title level={5} style={{ margin: "0 0 4px", color: "#141414" }}>
-                  Assalomu alaykum!
+                  {t("ai.welcomeGreeting")}
                 </Typography.Title>
                 <Typography.Paragraph style={{ color: "#8C8C8C", fontSize: 13, margin: "0 0 20px" }}>
-                  Men bank aktivlari bo'yicha AI yordamchiman. Savol bering!
+                  {t("ai.welcomeText")}
                 </Typography.Paragraph>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {QUICK_QUESTIONS.map((q, i) => (
+                  {QUICK_QUESTION_KEYS.map((qKey, i) => {
+                    const q = t(qKey);
+                    return (
                     <div
                       key={i}
                       onClick={() => sendMessage(q)}
@@ -283,7 +287,8 @@ export default function AIChatbot() {
                       <BulbOutlined style={{ color: "#B37FEB", flexShrink: 0 }} />
                       {q}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -366,7 +371,7 @@ export default function AIChatbot() {
                 >
                   <Spin size="small" />
                   <span style={{ marginLeft: 8, fontSize: 12, color: "#8C8C8C" }}>
-                    AI javob yozmoqda...
+                    {t("ai.typing")}
                   </span>
                 </div>
               </div>
@@ -385,7 +390,7 @@ export default function AIChatbot() {
             <div style={{ display: "flex", gap: 8 }}>
               <Input
                 ref={inputRef}
-                placeholder="Savolingizni yozing..."
+                placeholder={t("ai.inputPlaceholder")}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onPressEnter={() => sendMessage(input)}

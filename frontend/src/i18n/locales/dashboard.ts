@@ -1,0 +1,32 @@
+export default {
+  uz: {
+    totalAssets: "Jami aktivlar",
+    totalValue: "Umumiy qiymat",
+    assigned: "Biriktirilgan",
+    byCategory: "Kategoriya bo'yicha",
+    byStatus: "Status bo'yicha",
+    byDepartment: "Bo'limlar bo'yicha (top 8)",
+    count: "Soni",
+    assetsCount: "Aktivlar soni",
+  },
+  ru: {
+    totalAssets: "Всего активов",
+    totalValue: "Общая стоимость",
+    assigned: "Закреплено",
+    byCategory: "По категориям",
+    byStatus: "По статусу",
+    byDepartment: "По отделам (топ 8)",
+    count: "Количество",
+    assetsCount: "Количество активов",
+  },
+  en: {
+    totalAssets: "Total assets",
+    totalValue: "Total value",
+    assigned: "Assigned",
+    byCategory: "By category",
+    byStatus: "By status",
+    byDepartment: "By department (top 8)",
+    count: "Count",
+    assetsCount: "Asset count",
+  },
+};

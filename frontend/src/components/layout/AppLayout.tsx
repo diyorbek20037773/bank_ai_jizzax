@@ -1,24 +1,31 @@
 import { useState, useEffect } from "react";
-import { Layout, Menu, Button, Avatar, Dropdown, Tag, Badge, Tooltip } from "antd";
+import { Layout, Menu, Button, Avatar, Dropdown, Tag, Badge, Tooltip, Select } from "antd";
 import {
   DashboardOutlined, LaptopOutlined, ScanOutlined,
   DatabaseOutlined, AuditOutlined, LogoutOutlined,
   MenuFoldOutlined, MenuUnfoldOutlined,
   SafetyOutlined, RobotOutlined, BellOutlined,
-  SendOutlined,
+  SendOutlined, GithubOutlined, BulbOutlined, BulbFilled,
 } from "@ant-design/icons";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
+import { useT } from "../../i18n/I18nProvider";
+import { LANGS, LANG_SHORT, type Lang } from "../../i18n/resources";
 import { getPendingCount } from "../../api";
 import AIChatbot from "../ai/AIChatbot";
 
 const { Header, Sider, Content } = Layout;
+
+const GITHUB_URL = "https://github.com/diyorbek20037773/bank_ai_jizzax";
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { mode, toggle } = useTheme();
+  const { t, lang, setLang } = useT();
 
   const isUser = user?.role === "user";
   const isAdmin = user?.role === "admin";
@@ -36,30 +43,30 @@ export default function AppLayout() {
   }, [isAdmin]);
 
   const adminMenuItems = [
-    { key: "/", icon: <DashboardOutlined />, label: "Dashboard" },
-    { key: "/assets", icon: <LaptopOutlined />, label: "Aktivlar" },
+    { key: "/", icon: <DashboardOutlined />, label: t("menu.dashboard") },
+    { key: "/assets", icon: <LaptopOutlined />, label: t("menu.assets") },
     {
       key: "/requests",
       icon: <SendOutlined />,
-      label: <span>So'rovlar {pendingRequests > 0 && <Badge count={pendingRequests} size="small" style={{ marginLeft: 6 }} />}</span>,
+      label: <span>{t("menu.requests")} {pendingRequests > 0 && <Badge count={pendingRequests} size="small" style={{ marginLeft: 6 }} />}</span>,
     },
-    { key: "/scan", icon: <ScanOutlined />, label: "QR Skan" },
+    { key: "/scan", icon: <ScanOutlined />, label: t("menu.qrScan") },
     { type: "divider" as const },
-    { key: "/directory", icon: <DatabaseOutlined />, label: "Ma'lumotlar" },
-    { key: "/ai-analytics", icon: <RobotOutlined />, label: "AI Tahlil" },
-    { key: "/audit-log", icon: <AuditOutlined />, label: "Audit Log" },
+    { key: "/directory", icon: <DatabaseOutlined />, label: t("menu.data") },
+    { key: "/ai-analytics", icon: <RobotOutlined />, label: t("menu.aiAnalysis") },
+    { key: "/audit-log", icon: <AuditOutlined />, label: t("menu.auditLog") },
   ];
 
   const userMenuItems = [
-    { key: "/", icon: <LaptopOutlined />, label: "Mening aktivlarim" },
-    { key: "/scan", icon: <ScanOutlined />, label: "QR Skan" },
+    { key: "/", icon: <LaptopOutlined />, label: t("menu.myAssets") },
+    { key: "/scan", icon: <ScanOutlined />, label: t("menu.qrScan") },
   ];
 
   const menuItems = isUser ? userMenuItems : adminMenuItems;
 
   const roleLabels: Record<string, string> = {
-    admin: "ADMIN",
-    user: "XODIM",
+    admin: t("common.roleAdmin"),
+    user: t("common.roleUser"),
   };
 
   const roleColors: Record<string, string> = {
@@ -102,7 +109,7 @@ export default function AppLayout() {
           />
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {isAdmin && pendingRequests > 0 && (
-            <Tooltip title={`${pendingRequests} ta yangi so'rov`}>
+            <Tooltip title={t("menu.requests")}>
               <Badge count={pendingRequests} size="small">
                 <Button
                   type="text"
@@ -113,6 +120,35 @@ export default function AppLayout() {
               </Badge>
             </Tooltip>
           )}
+
+          <Select
+            value={lang}
+            onChange={(l) => setLang(l as Lang)}
+            size="small"
+            variant="borderless"
+            popupMatchSelectWidth={false}
+            className="lang-select"
+            options={LANGS.map((l) => ({ value: l, label: LANG_SHORT[l] }))}
+          />
+
+          <Tooltip title={t("common.theme")}>
+            <Button
+              type="text"
+              aria-label="toggle theme"
+              icon={mode === "dark" ? <BulbFilled style={{ fontSize: 18, color: "#FAAD14" }} /> : <BulbOutlined style={{ fontSize: 18 }} />}
+              onClick={toggle}
+            />
+          </Tooltip>
+
+          <Tooltip title={t("common.sourceCode")}>
+            <Button
+              type="text"
+              aria-label="github"
+              icon={<GithubOutlined style={{ fontSize: 19 }} />}
+              href={GITHUB_URL}
+              target="_blank"
+            />
+          </Tooltip>
           <Dropdown
             menu={{
               items: [
@@ -120,14 +156,14 @@ export default function AppLayout() {
                   key: "info",
                   label: (
                     <div style={{ padding: "6px 0" }}>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: "#141414" }}>{user?.full_name}</div>
-                      <div style={{ fontSize: 12, color: "#8c8c8c", marginTop: 2 }}>{user?.email || user?.username}</div>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text-primary)" }}>{user?.full_name}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-tertiary)", marginTop: 2 }}>{user?.email || user?.username}</div>
                     </div>
                   ),
                   disabled: true,
                 },
                 { type: "divider" },
-                { key: "logout", icon: <LogoutOutlined />, label: "Tizimdan chiqish", danger: true, onClick: logout },
+                { key: "logout", icon: <LogoutOutlined />, label: t("common.logout"), danger: true, onClick: logout },
               ],
             }}
             placement="bottomRight"
@@ -144,7 +180,7 @@ export default function AppLayout() {
                 {user?.full_name?.charAt(0)?.toUpperCase()}
               </Avatar>
               <div style={{ lineHeight: 1.3 }}>
-                <div style={{ fontWeight: 600, fontSize: 13, color: "#141414", letterSpacing: "-0.01em" }}>
+                <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
                   {user?.full_name}
                 </div>
                 <Tag

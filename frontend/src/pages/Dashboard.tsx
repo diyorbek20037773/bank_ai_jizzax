@@ -12,7 +12,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getOverview, getByCategory, getByStatus, getByDepartment } from "../api";
 import type { OverviewStats, CategoryStat, StatusStat, DepartmentStat } from "../types";
-import { STATUS_COLORS, STATUS_CONFIG } from "../utils/constants";
+import { STATUS_COLORS } from "../utils/constants";
+import { useT } from "../i18n/I18nProvider";
 
 const CHART_COLORS = ["#0958D9", "#52C41A", "#FA8C16", "#FF4D4F", "#722ED1", "#13C2C2", "#EB2F96", "#FAAD14", "#2F54EB", "#A0D911", "#36CFC9", "#597EF7"];
 
@@ -28,13 +29,13 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: "#fff", border: "1px solid #F0F0F0", borderRadius: 10,
-      padding: "12px 16px", boxShadow: "0 8px 24px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.04)",
+      background: "var(--bg-elevated)", border: "1px solid var(--border-light)", borderRadius: 10,
+      padding: "12px 16px", boxShadow: "var(--shadow-md)",
       backdropFilter: "blur(8px)",
     }}>
-      <div style={{ fontWeight: 600, fontSize: 13, color: "#141414", marginBottom: 6, letterSpacing: "-0.01em" }}>{label}</div>
+      <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)", marginBottom: 6, letterSpacing: "-0.01em" }}>{label}</div>
       {payload.map((p: any, i: number) => (
-        <div key={i} style={{ fontSize: 13, color: p.color || "#595959", lineHeight: 1.6 }}>
+        <div key={i} style={{ fontSize: 13, color: p.color || "var(--text-secondary)", lineHeight: 1.6 }}>
           {p.name}: <strong>{p.value}</strong>
         </div>
       ))}
@@ -43,15 +44,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const statusMeta = [
-  { key: "registered", label: "Ro'yxatda", icon: <InboxOutlined />, color: "#722ED1", bg: "#F9F0FF" },
-  { key: "assigned", label: "Biriktirilgan", icon: <CheckCircleOutlined />, color: "#52C41A", bg: "#F6FFED" },
-  { key: "in_repair", label: "Ta'mirda", icon: <ToolOutlined />, color: "#FA8C16", bg: "#FFF7E6" },
-  { key: "lost", label: "Yo'qolgan", icon: <ExclamationCircleOutlined />, color: "#FF4D4F", bg: "#FFF2F0" },
-  { key: "written_off", label: "Hisobdan chiqarilgan", icon: <StopOutlined />, color: "#D4A843", bg: "#FFFBE6" },
+  { key: "registered", code: "REGISTERED", icon: <InboxOutlined />, color: "#722ED1", bg: "#F9F0FF" },
+  { key: "assigned", code: "ASSIGNED", icon: <CheckCircleOutlined />, color: "#52C41A", bg: "#F6FFED" },
+  { key: "in_repair", code: "IN_REPAIR", icon: <ToolOutlined />, color: "#FA8C16", bg: "#FFF7E6" },
+  { key: "lost", code: "LOST", icon: <ExclamationCircleOutlined />, color: "#FF4D4F", bg: "#FFF2F0" },
+  { key: "written_off", code: "WRITTEN_OFF", icon: <StopOutlined />, color: "#D4A843", bg: "#FFFBE6" },
 ];
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { t } = useT();
   const [overview, setOverview] = useState<OverviewStats | null>(null);
   const [byCategory, setByCategory] = useState<CategoryStat[]>([]);
   const [byStatus, setByStatus] = useState<StatusStat[]>([]);
@@ -73,7 +75,7 @@ export default function Dashboard() {
     return (
       <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: 400, gap: 16 }}>
         <Spin size="large" />
-        <span style={{ fontSize: 13, color: "#8C8C8C", fontWeight: 450 }}>Ma'lumotlar yuklanmoqda...</span>
+        <span style={{ fontSize: 13, color: "var(--text-tertiary)", fontWeight: 450 }}>{t("common.loadingData")}</span>
       </div>
     );
   }
@@ -85,7 +87,7 @@ export default function Dashboard() {
 
   const statusData = byStatus.map((s) => ({
     ...s,
-    name: STATUS_CONFIG[s.status]?.label || s.status,
+    name: t(`common.statuses.${s.status}`),
     fill: STATUS_COLORS[s.status] || "#8c8c8c",
   }));
 
@@ -103,7 +105,7 @@ export default function Dashboard() {
               <LaptopOutlined style={{ color: "#fff", fontSize: 24 }} />
             </div>
             <div className="dash-hero-value" style={{ color: "#fff" }}>{total}</div>
-            <div className="dash-hero-label" style={{ color: "rgba(255,255,255,0.7)" }}>Jami aktivlar</div>
+            <div className="dash-hero-label" style={{ color: "rgba(255,255,255,0.7)" }}>{t("dashboard.totalAssets")}</div>
           </div>
         </Col>
         <Col xs={24} sm={8}>
@@ -112,25 +114,25 @@ export default function Dashboard() {
               <DollarOutlined style={{ color: "#fff", fontSize: 24 }} />
             </div>
             <div className="dash-hero-value" style={{ color: "#fff" }}>
-              {formatValue(totalValue)} <span style={{ fontSize: 14, fontWeight: 500 }}>so'm</span>
+              {formatValue(totalValue)} <span style={{ fontSize: 14, fontWeight: 500 }}>{t("common.currency")}</span>
             </div>
-            <div className="dash-hero-label" style={{ color: "rgba(255,255,255,0.7)" }}>Umumiy qiymat</div>
+            <div className="dash-hero-label" style={{ color: "rgba(255,255,255,0.7)" }}>{t("dashboard.totalValue")}</div>
           </div>
         </Col>
         <Col xs={24} sm={8}>
-          <div className="dash-hero-card" style={{ background: "#fff", border: "1px solid #F0F0F0" }}>
+          <div className="dash-hero-card" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-light)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <Progress
                 type="circle"
                 percent={assignedPercent}
                 size={72}
-                strokeColor="#0958D9"
-                trailColor="#F0F0F0"
-                format={(p) => <span style={{ fontSize: 16, fontWeight: 700, color: "#141414" }}>{p}%</span>}
+                strokeColor="#1677FF"
+                trailColor="var(--border-light)"
+                format={(p) => <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>{p}%</span>}
               />
               <div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: "#141414", lineHeight: 1.2 }}>{assigned}/{total}</div>
-                <div style={{ fontSize: 13, color: "#8C8C8C" }}>Biriktirilgan</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.2 }}>{assigned}/{total}</div>
+                <div style={{ fontSize: 13, color: "var(--text-tertiary)" }}>{t("dashboard.assigned")}</div>
               </div>
             </div>
           </div>
@@ -148,7 +150,7 @@ export default function Dashboard() {
                   {s.icon}
                 </div>
                 <div className="dash-status-value">{val}</div>
-                <div className="dash-status-label">{s.label}</div>
+                <div className="dash-status-label">{t(`common.statuses.${s.code}`)}</div>
               </div>
             </Col>
           );
@@ -160,7 +162,7 @@ export default function Dashboard() {
         <Col xs={24} lg={12}>
           <Card
             className="chart-card"
-            title="Kategoriya bo'yicha"
+            title={t("dashboard.byCategory")}
             styles={{ body: { padding: "16px 24px 24px" } }}
           >
             <ResponsiveContainer width="100%" height={300}>
@@ -198,7 +200,7 @@ export default function Dashboard() {
         <Col xs={24} lg={12}>
           <Card
             className="chart-card"
-            title="Status bo'yicha"
+            title={t("dashboard.byStatus")}
             styles={{ body: { padding: "16px 24px 24px" } }}
           >
             <ResponsiveContainer width="100%" height={300}>
@@ -212,7 +214,7 @@ export default function Dashboard() {
                 />
                 <YAxis tick={{ fontSize: 11, fill: "#8C8C8C" }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" name="Soni" radius={[6, 6, 0, 0]}>
+                <Bar dataKey="count" name={t("dashboard.count")} radius={[6, 6, 0, 0]}>
                   {statusData.map((entry, i) => (
                     <Cell key={i} fill={entry.fill} />
                   ))}
@@ -229,7 +231,7 @@ export default function Dashboard() {
           <Col xs={24}>
             <Card
               className="chart-card"
-              title="Bo'limlar bo'yicha (top 8)"
+              title={t("dashboard.byDepartment")}
               styles={{ body: { padding: "16px 24px 24px" } }}
             >
               <ResponsiveContainer width="100%" height={320}>
@@ -250,7 +252,7 @@ export default function Dashboard() {
                     tickLine={false}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="count" name="Aktivlar soni" radius={[0, 6, 6, 0]}>
+                  <Bar dataKey="count" name={t("dashboard.assetsCount")} radius={[0, 6, 6, 0]}>
                     {byDepartment.map((_, i) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} opacity={0.85} />
                     ))}

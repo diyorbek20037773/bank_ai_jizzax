@@ -12,6 +12,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { aiInsights, aiRiskAssessment, aiProblematicAssets } from "../api";
+import { useT } from "../i18n/I18nProvider";
 
 type InsightItem = { type: string; title: string; description: string; priority: string };
 type RiskAsset = { id: number; name: string; risk_score: number; risk_level: string; recommendation: string; predicted_failure?: string };
@@ -25,8 +26,8 @@ const AI_MODULES = [
   {
     key: "insights",
     icon: <BulbOutlined style={{ fontSize: 22 }} />,
-    title: "Tavsiyalar",
-    description: "Inventarizatsiya va audit bo'yicha tavsiyalar",
+    titleKey: "ai.insights.title",
+    descKey: "ai.insights.desc",
     gradient: "linear-gradient(135deg, #FFF8E1 0%, #FFF3CD 100%)",
     borderColor: "#FFE082",
     iconBg: "linear-gradient(135deg, #FAAD14, #D48806)",
@@ -35,8 +36,8 @@ const AI_MODULES = [
   {
     key: "risk",
     icon: <SafetyOutlined style={{ fontSize: 22 }} />,
-    title: "Nosozlik xavfi",
-    description: "Aktivlar nosozlik xavfini baholash",
+    titleKey: "ai.risk.title",
+    descKey: "ai.risk.desc",
     gradient: "linear-gradient(135deg, #FFF1F0 0%, #FFCCC7 100%)",
     borderColor: "#FFA39E",
     iconBg: "linear-gradient(135deg, #FF4D4F, #CF1322)",
@@ -45,8 +46,8 @@ const AI_MODULES = [
   {
     key: "problems",
     icon: <ExclamationCircleOutlined style={{ fontSize: 22 }} />,
-    title: "Muammoli aktivlar",
-    description: "Muammoli aktivlarni aniqlash va yechimlar",
+    titleKey: "ai.problems.title",
+    descKey: "ai.problems.desc",
     gradient: "linear-gradient(135deg, #FFF7E6 0%, #FFE7BA 100%)",
     borderColor: "#FFD591",
     iconBg: "linear-gradient(135deg, #FA8C16, #D46B08)",
@@ -56,6 +57,7 @@ const AI_MODULES = [
 
 export default function AIAnalytics() {
   const navigate = useNavigate();
+  const { t } = useT();
 
   const [insights, setInsights] = useState<InsightItem[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
@@ -78,7 +80,7 @@ export default function AIAnalytics() {
     try {
       const { data } = await aiInsights();
       setInsights(data.insights || []); setInsightsLoaded(true);
-    } catch (e: any) { setError(e.response?.data?.detail || "Tavsiyalar yuklanmadi"); }
+    } catch (e: any) { setError(e.response?.data?.detail || t("ai.insights.loadError")); }
     setInsightsLoading(false);
   };
 
@@ -87,7 +89,7 @@ export default function AIAnalytics() {
     try {
       const { data } = await aiRiskAssessment();
       setRiskAnalysis(data.analysis || ""); setRiskAssets(data.assets || []); setRiskLoaded(true);
-    } catch (e: any) { setError(e.response?.data?.detail || "Risk tahlili yuklanmadi"); }
+    } catch (e: any) { setError(e.response?.data?.detail || t("ai.risk.loadError")); }
     setRiskLoading(false);
   };
 
@@ -96,7 +98,7 @@ export default function AIAnalytics() {
     try {
       const { data } = await aiProblematicAssets();
       setProblemSummary(data.summary || ""); setProblemAssets(data.problematic_assets || []); setProblemLoaded(true);
-    } catch (e: any) { setError(e.response?.data?.detail || "Muammoli aktivlar yuklanmadi"); }
+    } catch (e: any) { setError(e.response?.data?.detail || t("ai.problems.loadError")); }
     setProblemLoading(false);
   };
 
@@ -106,9 +108,9 @@ export default function AIAnalytics() {
   const resultCounts = [insights.length, riskAssets.length, problemAssets.length];
 
   const getModuleStatus = (idx: number) => {
-    if (loadingStates[idx]) return <Tag icon={<SyncOutlined spin />} color="processing" style={{ margin: 0, borderRadius: 6 }}>Tahlil qilmoqda...</Tag>;
-    if (loadedStates[idx]) return <Tag icon={<CheckCircleOutlined />} color="success" style={{ margin: 0, borderRadius: 6 }}>{resultCounts[idx]} ta natija</Tag>;
-    return <Tag icon={<ClockCircleOutlined />} style={{ margin: 0, borderRadius: 6, color: "#8C8C8C" }}>Boshlash</Tag>;
+    if (loadingStates[idx]) return <Tag icon={<SyncOutlined spin />} color="processing" style={{ margin: 0, borderRadius: 6 }}>{t("ai.statusAnalyzing")}</Tag>;
+    if (loadedStates[idx]) return <Tag icon={<CheckCircleOutlined />} color="success" style={{ margin: 0, borderRadius: 6 }}>{t("ai.statusResults", { n: resultCounts[idx] })}</Tag>;
+    return <Tag icon={<ClockCircleOutlined />} style={{ margin: 0, borderRadius: 6, color: "#8C8C8C" }}>{t("ai.statusStart")}</Tag>;
   };
 
   return (
@@ -124,7 +126,7 @@ export default function AIAnalytics() {
           <span style={{ color: "#CF1322", fontSize: 13 }}>
             <ExclamationCircleOutlined style={{ marginRight: 8 }} />{error}
           </span>
-          <Button size="small" onClick={() => setError("")}>Yopish</Button>
+          <Button size="small" onClick={() => setError("")}>{t("common.close")}</Button>
         </div>
       )}
 
@@ -166,10 +168,10 @@ export default function AIAnalytics() {
               </div>
 
               <Typography.Text strong style={{ fontSize: 15, color: "#141414", marginBottom: 6, display: "block" }}>
-                {mod.title}
+                {t(mod.titleKey)}
               </Typography.Text>
               <Typography.Text style={{ fontSize: 12.5, color: "#595959", flex: 1 }}>
-                {mod.description}
+                {t(mod.descKey)}
               </Typography.Text>
 
               {!loadedStates[idx] && !loadingStates[idx] && (
@@ -180,7 +182,7 @@ export default function AIAnalytics() {
                 }}>
                   <FireOutlined style={{ color: mod.accentColor, marginRight: 6 }} />
                   <Typography.Text style={{ fontSize: 12, color: mod.accentColor, fontWeight: 500 }}>
-                    Bosib tahlilni boshlang
+                    {t("ai.clickToStart")}
                   </Typography.Text>
                 </div>
               )}
@@ -198,9 +200,9 @@ export default function AIAnalytics() {
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                 }}>
                   <span style={{ fontSize: 12, color: "#389E0D" }}>
-                    <CheckCircleOutlined style={{ marginRight: 4 }} />{resultCounts[idx]} ta natija
+                    <CheckCircleOutlined style={{ marginRight: 4 }} />{t("ai.statusResults", { n: resultCounts[idx] })}
                   </span>
-                  <Tooltip title="Qayta tahlil">
+                  <Tooltip title={t("ai.reanalyze")}>
                     <ReloadOutlined
                       style={{ color: "#8C8C8C", cursor: "pointer", fontSize: 12 }}
                       onClick={(e) => { e.stopPropagation(); loaders[idx](); }}
@@ -221,12 +223,12 @@ export default function AIAnalytics() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <BulbOutlined style={{ fontSize: 20, color: "#FAAD14" }} />
-            <Typography.Text strong style={{ fontSize: 15 }}>Tavsiyalar</Typography.Text>
-            <Tag color="gold" style={{ borderRadius: 6, fontSize: 11 }}>{insights.length} ta</Tag>
+            <Typography.Text strong style={{ fontSize: 15 }}>{t("ai.insights.title")}</Typography.Text>
+            <Tag color="gold" style={{ borderRadius: 6, fontSize: 11 }}>{t("ai.countSuffix", { n: insights.length })}</Tag>
           </div>
 
           {insights.length === 0 ? (
-            <Empty description="Tavsiya topilmadi" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            <Empty description={t("ai.insights.empty")} image={Empty.PRESENTED_IMAGE_SIMPLE} />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {insights.map((item, i) => (
@@ -265,8 +267,8 @@ export default function AIAnalytics() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <SafetyOutlined style={{ fontSize: 20, color: "#FF4D4F" }} />
-            <Typography.Text strong style={{ fontSize: 15 }}>Nosozlik xavfi</Typography.Text>
-            <Tag color="red" style={{ borderRadius: 6, fontSize: 11 }}>{riskAssets.length} ta</Tag>
+            <Typography.Text strong style={{ fontSize: 15 }}>{t("ai.risk.title")}</Typography.Text>
+            <Tag color="red" style={{ borderRadius: 6, fontSize: 11 }}>{t("ai.countSuffix", { n: riskAssets.length })}</Tag>
           </div>
 
           {riskAnalysis && (
@@ -280,7 +282,7 @@ export default function AIAnalytics() {
           )}
 
           {riskAssets.length === 0 ? (
-            <Empty description="Xavfli aktiv topilmadi" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            <Empty description={t("ai.risk.empty")} image={Empty.PRESENTED_IMAGE_SIMPLE} />
           ) : (
             <Row gutter={[12, 12]}>
               {riskAssets.map((asset) => (
@@ -306,7 +308,7 @@ export default function AIAnalytics() {
                       style={{ marginBottom: 6 }}
                     />
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                      <span style={{ fontSize: 11, color: "#8C8C8C" }}>Xavf</span>
+                      <span style={{ fontSize: 11, color: "#8C8C8C" }}>{t("ai.risk.label")}</span>
                       <span style={{ fontSize: 12, fontWeight: 600, color: RISK_COLORS[asset.risk_level] }}>{asset.risk_score}%</span>
                     </div>
                     {asset.predicted_failure && (
@@ -316,7 +318,7 @@ export default function AIAnalytics() {
                     )}
                     <div style={{ fontSize: 11.5, color: "#595959" }}>{asset.recommendation}</div>
                     <div style={{ marginTop: 6, fontSize: 11, color: "#1677FF" }}>
-                      <ArrowRightOutlined style={{ marginRight: 4 }} />Batafsil
+                      <ArrowRightOutlined style={{ marginRight: 4 }} />{t("ai.details")}
                     </div>
                   </div>
                 </Col>
@@ -334,8 +336,8 @@ export default function AIAnalytics() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <ExclamationCircleOutlined style={{ fontSize: 20, color: "#FA8C16" }} />
-            <Typography.Text strong style={{ fontSize: 15 }}>Muammoli aktivlar</Typography.Text>
-            <Tag color="orange" style={{ borderRadius: 6, fontSize: 11 }}>{problemAssets.length} ta</Tag>
+            <Typography.Text strong style={{ fontSize: 15 }}>{t("ai.problems.title")}</Typography.Text>
+            <Tag color="orange" style={{ borderRadius: 6, fontSize: 11 }}>{t("ai.countSuffix", { n: problemAssets.length })}</Tag>
           </div>
 
           {problemSummary && (
@@ -349,7 +351,7 @@ export default function AIAnalytics() {
           )}
 
           {problemAssets.length === 0 ? (
-            <Empty description="Muammoli aktiv topilmadi" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            <Empty description={t("ai.problems.empty")} image={Empty.PRESENTED_IMAGE_SIMPLE} />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {problemAssets.map((asset, i) => (

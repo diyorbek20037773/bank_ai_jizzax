@@ -9,6 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getAllRequests, respondToRequest } from "../api";
 import { API_BASE } from "../utils/constants";
+import { useT } from "../i18n/I18nProvider";
 import dayjs from "dayjs";
 
 interface RequestItem {
@@ -28,21 +29,24 @@ interface RequestItem {
   created_at: string;
 }
 
-const TYPE_LABELS: Record<string, { label: string; color: string }> = {
-  STATUS_CHANGE: { label: "Status o'zgartirish", color: "blue" },
-  REPORT_LOST: { label: "Yo'qolgan", color: "red" },
-  REPORT_DAMAGE: { label: "Shikastlangan", color: "orange" },
-  OTHER: { label: "Boshqa", color: "default" },
+const TYPE_CONFIG: Record<string, { color: string }> = {
+  STATUS_CHANGE: { color: "blue" },
+  REPORT_LOST: { color: "red" },
+  REPORT_DAMAGE: { color: "orange" },
+  OTHER: { color: "default" },
 };
 
-const STATUS_LABELS: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  PENDING: { label: "Kutilmoqda", color: "orange", icon: <ClockCircleOutlined /> },
-  APPROVED: { label: "Tasdiqlangan", color: "green", icon: <CheckCircleOutlined /> },
-  REJECTED: { label: "Rad etilgan", color: "red", icon: <CloseCircleOutlined /> },
+const STATUS_CONFIG: Record<string, { color: string; icon: React.ReactNode }> = {
+  PENDING: { color: "orange", icon: <ClockCircleOutlined /> },
+  APPROVED: { color: "green", icon: <CheckCircleOutlined /> },
+  REJECTED: { color: "red", icon: <CloseCircleOutlined /> },
 };
 
 export default function Requests() {
+  const { t } = useT();
   const navigate = useNavigate();
+  const typeLabel = (k: string) => t(`requests.types.${TYPE_CONFIG[k] ? k : "OTHER"}`);
+  const statusLabel = (k: string) => t(`requests.statuses.${STATUS_CONFIG[k] ? k : "PENDING"}`);
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionModal, setActionModal] = useState<RequestItem | null>(null);
@@ -66,12 +70,12 @@ export default function Requests() {
         status: action,
         admin_response: adminResponse.trim() || undefined,
       });
-      message.success(action === "APPROVED" ? "So'rov tasdiqlandi" : "So'rov rad etildi");
+      message.success(action === "APPROVED" ? t("requests.approvedMsg") : t("requests.rejectedMsg"));
       setActionModal(null);
       setAdminResponse("");
       fetchRequests();
     } catch {
-      message.error("Xatolik yuz berdi");
+      message.error(t("requests.actionError"));
     } finally {
       setSubmitting(false);
     }
@@ -85,7 +89,7 @@ export default function Requests() {
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <SendOutlined style={{ color: "#722ED1" }} />
-            <span>Xodimlar so'rovlari</span>
+            <span>{t("requests.headerEmployee")}</span>
             {pendingCount > 0 && (
               <Badge count={pendingCount} style={{ marginLeft: 4 }} />
             )}
@@ -96,7 +100,7 @@ export default function Requests() {
         {loading ? (
           <div style={{ textAlign: "center", padding: 40 }}><Spin /></div>
         ) : requests.length === 0 ? (
-          <Empty description="Hali so'rov yo'q" />
+          <Empty description={t("requests.emptyEmployee")} />
         ) : (
           <Table
             dataSource={requests}
@@ -105,24 +109,24 @@ export default function Requests() {
             pagination={{ pageSize: 15 }}
             columns={[
               {
-                title: "Xodim",
+                title: t("requests.colEmployee"),
                 dataIndex: "user_name",
                 key: "user",
                 width: 130,
                 render: (v: string) => <span style={{ fontWeight: 500 }}>{v}</span>,
               },
               {
-                title: "Turi",
+                title: t("requests.colType"),
                 dataIndex: "request_type",
                 key: "type",
                 width: 140,
-                render: (t: string) => {
-                  const cfg = TYPE_LABELS[t] || TYPE_LABELS.OTHER;
-                  return <Tag color={cfg.color} style={{ borderRadius: 6 }}>{cfg.label}</Tag>;
+                render: (rt: string) => {
+                  const cfg = TYPE_CONFIG[rt] || TYPE_CONFIG.OTHER;
+                  return <Tag color={cfg.color} style={{ borderRadius: 6 }}>{typeLabel(rt)}</Tag>;
                 },
               },
               {
-                title: "Aktiv",
+                title: t("requests.colAsset"),
                 key: "asset",
                 width: 180,
                 render: (_: unknown, r: RequestItem) => r.asset_name ? (
@@ -133,7 +137,7 @@ export default function Requests() {
                 ) : "—",
               },
               {
-                title: "Sabab",
+                title: t("requests.colReason"),
                 dataIndex: "reason",
                 key: "reason",
                 ellipsis: true,
@@ -142,24 +146,24 @@ export default function Requests() {
                 ),
               },
               {
-                title: "Holat",
+                title: t("requests.colStatus"),
                 dataIndex: "status",
                 key: "status",
                 width: 130,
                 render: (s: string) => {
-                  const cfg = STATUS_LABELS[s] || STATUS_LABELS.PENDING;
-                  return <Tag icon={cfg.icon} color={cfg.color} style={{ borderRadius: 6 }}>{cfg.label}</Tag>;
+                  const cfg = STATUS_CONFIG[s] || STATUS_CONFIG.PENDING;
+                  return <Tag icon={cfg.icon} color={cfg.color} style={{ borderRadius: 6 }}>{statusLabel(s)}</Tag>;
                 },
                 filters: [
-                  { text: "Kutilmoqda", value: "PENDING" },
-                  { text: "Tasdiqlangan", value: "APPROVED" },
-                  { text: "Rad etilgan", value: "REJECTED" },
+                  { text: t("requests.statuses.PENDING"), value: "PENDING" },
+                  { text: t("requests.statuses.APPROVED"), value: "APPROVED" },
+                  { text: t("requests.statuses.REJECTED"), value: "REJECTED" },
                 ],
                 onFilter: (v, r) => r.status === v,
                 defaultFilteredValue: ["PENDING"],
               },
               {
-                title: "Sana",
+                title: t("requests.colDate"),
                 dataIndex: "created_at",
                 key: "date",
                 width: 120,
@@ -179,7 +183,7 @@ export default function Requests() {
                     {r.status === "PENDING" && (
                       <Button size="small" type="primary" onClick={() => setActionModal(r)}
                         style={{ borderRadius: 6, background: "#722ED1" }}>
-                        Ko'rish
+                        {t("requests.viewBtn")}
                       </Button>
                     )}
                   </Space>
@@ -192,36 +196,36 @@ export default function Requests() {
 
       {/* Action Modal */}
       <Modal
-        title="So'rovni ko'rib chiqish"
+        title={t("requests.reviewTitle")}
         open={!!actionModal}
         onCancel={() => { setActionModal(null); setAdminResponse(""); }}
         footer={actionModal?.status === "PENDING" ? [
           <Button key="reject" danger icon={<CloseCircleOutlined />} loading={submitting}
             onClick={() => handleAction("REJECTED")}>
-            Rad etish
+            {t("requests.reject")}
           </Button>,
           <Button key="approve" type="primary" icon={<CheckCircleOutlined />} loading={submitting}
             onClick={() => handleAction("APPROVED")}
             style={{ background: "#52C41A", borderColor: "#52C41A" }}>
-            Tasdiqlash
+            {t("requests.approve")}
           </Button>,
         ] : null}
       >
         {actionModal && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ padding: "12px 16px", borderRadius: 10, background: "#FAFAFA", border: "1px solid #F0F0F0" }}>
-              <div style={{ fontSize: 12, color: "#8C8C8C", marginBottom: 4 }}>Xodim</div>
+              <div style={{ fontSize: 12, color: "#8C8C8C", marginBottom: 4 }}>{t("requests.employeeLabel")}</div>
               <div style={{ fontWeight: 600 }}>{actionModal.user_name}</div>
             </div>
             <div style={{ padding: "12px 16px", borderRadius: 10, background: "#FAFAFA", border: "1px solid #F0F0F0" }}>
-              <div style={{ fontSize: 12, color: "#8C8C8C", marginBottom: 4 }}>So'rov turi</div>
-              <Tag color={TYPE_LABELS[actionModal.request_type]?.color} style={{ borderRadius: 6 }}>
-                {TYPE_LABELS[actionModal.request_type]?.label || actionModal.request_type}
+              <div style={{ fontSize: 12, color: "#8C8C8C", marginBottom: 4 }}>{t("requests.requestType")}</div>
+              <Tag color={TYPE_CONFIG[actionModal.request_type]?.color} style={{ borderRadius: 6 }}>
+                {TYPE_CONFIG[actionModal.request_type] ? typeLabel(actionModal.request_type) : actionModal.request_type}
               </Tag>
             </div>
             {actionModal.asset_name && (
               <div style={{ padding: "12px 16px", borderRadius: 10, background: "#FAFAFA", border: "1px solid #F0F0F0" }}>
-                <div style={{ fontSize: 12, color: "#8C8C8C", marginBottom: 4 }}>Aktiv</div>
+                <div style={{ fontSize: 12, color: "#8C8C8C", marginBottom: 4 }}>{t("requests.colAsset")}</div>
                 <div style={{ fontWeight: 500 }}>
                   {actionModal.asset_name}{" "}
                   <span style={{ color: "#0958D9", fontSize: 12 }}>({actionModal.asset_inventory_number})</span>
@@ -229,15 +233,15 @@ export default function Requests() {
               </div>
             )}
             <div style={{ padding: "12px 16px", borderRadius: 10, background: "#FFF7E6", border: "1px solid #FFE58F" }}>
-              <div style={{ fontSize: 12, color: "#8C8C8C", marginBottom: 4 }}>Sabab</div>
+              <div style={{ fontSize: 12, color: "#8C8C8C", marginBottom: 4 }}>{t("requests.reasonLabel")}</div>
               <div style={{ fontSize: 13.5 }}>{actionModal.reason}</div>
             </div>
             {actionModal.photo_path && (
               <div style={{ padding: "12px 16px", borderRadius: 10, background: "#FAFAFA", border: "1px solid #F0F0F0" }}>
-                <div style={{ fontSize: 12, color: "#8C8C8C", marginBottom: 8 }}>Qo'shimcha rasm</div>
+                <div style={{ fontSize: 12, color: "#8C8C8C", marginBottom: 8 }}>{t("requests.additionalPhoto")}</div>
                 <img
                   src={`${API_BASE}${actionModal.photo_path}`}
-                  alt="So'rov rasmi"
+                  alt={t("requests.photoAlt")}
                   style={{ maxWidth: "100%", borderRadius: 8 }}
                 />
               </div>
@@ -245,10 +249,10 @@ export default function Requests() {
             {actionModal.status === "PENDING" && (
               <div>
                 <label style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, display: "block" }}>
-                  Javob (ixtiyoriy)
+                  {t("requests.responseOptional")}
                 </label>
                 <Input.TextArea
-                  placeholder="Xodimga javob yozing..."
+                  placeholder={t("requests.responsePlaceholder")}
                   value={adminResponse}
                   onChange={(e) => setAdminResponse(e.target.value)}
                   rows={3}

@@ -1,0 +1,32 @@
+export default {
+  uz: {
+    dashboard: "Boshqaruv paneli",
+    assets: "Aktivlar",
+    requests: "So'rovlar",
+    qrScan: "QR Skan",
+    data: "Ma'lumotlar",
+    aiAnalysis: "AI Tahlil",
+    auditLog: "Audit jurnali",
+    myAssets: "Mening aktivlarim",
+  },
+  ru: {
+    dashboard: "Панель управления",
+    assets: "Активы",
+    requests: "Запросы",
+    qrScan: "QR Скан",
+    data: "Данные",
+    aiAnalysis: "AI Анализ",
+    auditLog: "Журнал аудита",
+    myAssets: "Мои активы",
+  },
+  en: {
+    dashboard: "Dashboard",
+    assets: "Assets",
+    requests: "Requests",
+    qrScan: "QR Scan",
+    data: "Data",
+    aiAnalysis: "AI Analysis",
+    auditLog: "Audit log",
+    myAssets: "My assets",
+  },
+};

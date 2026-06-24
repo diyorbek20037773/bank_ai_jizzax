@@ -3,6 +3,7 @@ import { Table, Tag, Select } from "antd";
 import { getAuditLogs, getUsers } from "../api";
 import type { AuditLog, User } from "../types";
 import dayjs from "dayjs";
+import { useT } from "../i18n/I18nProvider";
 
 const ACTION_COLORS: Record<string, string> = {
   CREATED: "green",
@@ -14,6 +15,7 @@ const ACTION_COLORS: Record<string, string> = {
 };
 
 export default function AuditLogPage() {
+  const { t } = useT();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -41,21 +43,21 @@ export default function AuditLogPage() {
     <div className="animate-in">
       <div className="filter-bar" style={{ display: "flex", justifyContent: "flex-end", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
         <Select
-          placeholder="Amal bo'yicha"
+          placeholder={t("audit.actionFilter")}
           allowClear
           style={{ width: 180 }}
           onChange={(v) => { setPage(1); setActionFilter(v); }}
           options={[
-            { value: "CREATED", label: "Yaratilgan" },
-            { value: "UPDATED", label: "Tahrirlangan" },
-            { value: "STATUS_CHANGED", label: "Status o'zgargan" },
-            { value: "ASSIGNED", label: "Biriktirilgan" },
-            { value: "RETURNED", label: "Qaytarilgan" },
-            { value: "DELETED", label: "O'chirilgan" },
+            { value: "CREATED", label: t("audit.actions.CREATED") },
+            { value: "UPDATED", label: t("audit.actions.UPDATED") },
+            { value: "STATUS_CHANGED", label: t("audit.actions.STATUS_CHANGED") },
+            { value: "ASSIGNED", label: t("audit.actions.ASSIGNED") },
+            { value: "RETURNED", label: t("audit.actions.RETURNED") },
+            { value: "DELETED", label: t("audit.actions.DELETED") },
           ]}
         />
         <Select
-          placeholder="Foydalanuvchi bo'yicha"
+          placeholder={t("audit.userFilter")}
           allowClear
           showSearch
           optionFilterProp="label"
@@ -74,12 +76,12 @@ export default function AuditLogPage() {
           current: page,
           pageSize: 20,
           total,
-          showTotal: (t) => `Jami: ${t}`,
+          showTotal: (n) => t("audit.total", { n }),
           onChange: setPage,
         }}
         columns={[
           {
-            title: "Vaqt", dataIndex: "performed_at", width: 150,
+            title: t("audit.time"), dataIndex: "performed_at", width: 150,
             render: (v: string) => (
               <span style={{ fontSize: 13, color: "#595959" }}>
                 {dayjs(v).format("DD.MM.YYYY HH:mm")}
@@ -87,15 +89,15 @@ export default function AuditLogPage() {
             ),
           },
           {
-            title: "Amal", dataIndex: "action", width: 140,
+            title: t("audit.action"), dataIndex: "action", width: 140,
             render: (v: string) => (
-              <Tag color={ACTION_COLORS[v] || "default"} style={{ borderRadius: 6 }}>{v}</Tag>
+              <Tag color={ACTION_COLORS[v] || "default"} style={{ borderRadius: 6 }}>{t(`audit.actions.${v}`)}</Tag>
             ),
           },
-          { title: "Tavsif", dataIndex: "description", ellipsis: true },
-          { title: "Bajaruvchi", dataIndex: ["user", "full_name"], width: 150 },
+          { title: t("audit.description"), dataIndex: "description", ellipsis: true },
+          { title: t("audit.performedBy"), dataIndex: ["user", "full_name"], width: 150 },
           {
-            title: "Aktiv ID", dataIndex: "asset_id", width: 80,
+            title: t("audit.assetId"), dataIndex: "asset_id", width: 80,
             render: (v: number) => v || <span style={{ color: "#bfbfbf" }}>—</span>,
           },
         ]}

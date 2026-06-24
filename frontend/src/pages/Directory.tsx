@@ -15,9 +15,11 @@ import {
   createCategory, updateCategory,
 } from "../api";
 import type { Employee, Department, Branch, Category } from "../types";
+import { useT } from "../i18n/I18nProvider";
 
 // ─── Xodimlar Tab ───
 function EmployeesTab() {
+  const { t } = useT();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(false);
@@ -59,20 +61,20 @@ function EmployeesTab() {
     try {
       if (editing) {
         await updateEmployee(editing.id, values);
-        message.success("Xodim yangilandi");
+        message.success(t("directory.employees.updated"));
       } else {
         await createEmployee(values);
-        message.success("Xodim qo'shildi");
+        message.success(t("directory.employees.created"));
       }
       setModal(false); form.resetFields(); setEditing(null); fetch();
-    } catch (e: any) { message.error(e.response?.data?.detail || "Xatolik"); }
+    } catch (e: any) { message.error(e.response?.data?.detail || t("common.error")); }
   };
 
   return (
     <>
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         <Input
-          placeholder="Qidirish (ism, kod, lavozim...)"
+          placeholder={t("directory.employees.searchPlaceholder")}
           prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -80,7 +82,7 @@ function EmployeesTab() {
           style={{ maxWidth: 300, flex: 1 }}
         />
         <Select
-          placeholder="Bo'lim filtri"
+          placeholder={t("directory.employees.deptFilter")}
           allowClear
           value={deptFilter}
           onChange={(v) => setDeptFilter(v)}
@@ -89,28 +91,28 @@ function EmployeesTab() {
         />
         <div style={{ flex: 1 }} />
         <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setModal(true); }}>
-          Yangi xodim
+          {t("directory.employees.new")}
         </Button>
       </div>
       <Table
         dataSource={filtered} rowKey="id" loading={loading} size="middle"
         scroll={{ x: 700 }}
-        pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (t) => `Jami: ${t}` }}
+        pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (total) => t("directory.total", { n: total }) }}
         columns={[
-          { title: "Kod", dataIndex: "employee_code", width: 100 },
-          { title: "F.I.O", dataIndex: "full_name", ellipsis: true },
-          { title: "Lavozim", dataIndex: "position", ellipsis: true },
-          { title: "Bo'lim", dataIndex: ["department", "name"], width: 160, ellipsis: true },
-          { title: "Telefon", dataIndex: "phone", width: 140 },
+          { title: t("directory.employees.cols.code"), dataIndex: "employee_code", width: 100 },
+          { title: t("directory.employees.cols.fullName"), dataIndex: "full_name", ellipsis: true },
+          { title: t("directory.employees.cols.position"), dataIndex: "position", ellipsis: true },
+          { title: t("directory.employees.cols.department"), dataIndex: ["department", "name"], width: 160, ellipsis: true },
+          { title: t("directory.employees.cols.phone"), dataIndex: "phone", width: 140 },
           {
             title: "", width: 80, fixed: "right" as const,
             render: (_: unknown, r: Employee) => (
               <Space size={0}>
-                <Tooltip title="Tahrirlash">
+                <Tooltip title={t("common.edit")}>
                   <Button type="text" size="small" icon={<EditOutlined />} onClick={() => { setEditing(r); form.setFieldsValue({ ...r, department_id: r.department_id }); setModal(true); }} />
                 </Tooltip>
-                <Popconfirm title="Xodimni o'chirishni tasdiqlaysizmi?" onConfirm={async () => { await deleteEmployee(r.id); message.success("O'chirildi"); fetch(); }} okText="Ha" cancelText="Yo'q">
-                  <Tooltip title="O'chirish">
+                <Popconfirm title={t("directory.employees.confirmDelete")} onConfirm={async () => { await deleteEmployee(r.id); message.success(t("directory.deleted")); fetch(); }} okText={t("common.yes")} cancelText={t("common.no")}>
+                  <Tooltip title={t("common.delete")}>
                     <Button type="text" size="small" danger icon={<DeleteOutlined />} />
                   </Tooltip>
                 </Popconfirm>
@@ -120,20 +122,20 @@ function EmployeesTab() {
         ]}
       />
       <Modal
-        title={editing ? "Xodimni tahrirlash" : "Yangi xodim"}
+        title={editing ? t("directory.employees.edit") : t("directory.employees.new")}
         open={modal} onOk={() => form.submit()}
         onCancel={() => { setModal(false); setEditing(null); }}
-        okText="Saqlash" cancelText="Bekor qilish"
+        okText={t("common.save")} cancelText={t("common.cancel")}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="full_name" label="F.I.O" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="employee_code" label="Xodim kodi" rules={[{ required: true }]}><Input placeholder="EMP-001" /></Form.Item>
-          <Form.Item name="position" label="Lavozim"><Input /></Form.Item>
-          <Form.Item name="department_id" label="Bo'lim" rules={[{ required: true }]}>
+          <Form.Item name="full_name" label={t("directory.employees.fields.fullName")} rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item name="employee_code" label={t("directory.employees.fields.employeeCode")} rules={[{ required: true }]}><Input placeholder="EMP-001" /></Form.Item>
+          <Form.Item name="position" label={t("directory.employees.fields.position")}><Input /></Form.Item>
+          <Form.Item name="department_id" label={t("directory.employees.fields.department")} rules={[{ required: true }]}>
             <Select showSearch optionFilterProp="label" options={departments.map((d) => ({ value: d.id, label: `${d.name} (${d.code})` }))} />
           </Form.Item>
-          <Form.Item name="phone" label="Telefon"><Input /></Form.Item>
-          <Form.Item name="email" label="Email"><Input /></Form.Item>
+          <Form.Item name="phone" label={t("directory.employees.fields.phone")}><Input /></Form.Item>
+          <Form.Item name="email" label={t("directory.employees.fields.email")}><Input /></Form.Item>
         </Form>
       </Modal>
     </>
@@ -142,6 +144,7 @@ function EmployeesTab() {
 
 // ─── Bo'limlar Tab ───
 function DepartmentsTab() {
+  const { t } = useT();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
@@ -175,17 +178,17 @@ function DepartmentsTab() {
 
   const handleSubmit = async (values: any) => {
     try {
-      if (editing) { await updateDepartment(editing.id, values); message.success("Bo'lim yangilandi"); }
-      else { await createDepartment(values); message.success("Bo'lim qo'shildi"); }
+      if (editing) { await updateDepartment(editing.id, values); message.success(t("directory.departments.updated")); }
+      else { await createDepartment(values); message.success(t("directory.departments.created")); }
       setModal(false); form.resetFields(); setEditing(null); fetch();
-    } catch (e: any) { message.error(e.response?.data?.detail || "Xatolik"); }
+    } catch (e: any) { message.error(e.response?.data?.detail || t("common.error")); }
   };
 
   return (
     <>
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         <Input
-          placeholder="Qidirish (nom, kod...)"
+          placeholder={t("directory.departments.searchPlaceholder")}
           prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -193,7 +196,7 @@ function DepartmentsTab() {
           style={{ maxWidth: 260, flex: 1 }}
         />
         <Select
-          placeholder="Filial filtri"
+          placeholder={t("directory.departments.branchFilter")}
           allowClear
           value={branchFilter}
           onChange={(v) => setBranchFilter(v)}
@@ -202,25 +205,25 @@ function DepartmentsTab() {
         />
         <div style={{ flex: 1 }} />
         <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setModal(true); }}>
-          Yangi bo'lim
+          {t("directory.departments.new")}
         </Button>
       </div>
       <Table
         dataSource={filtered} rowKey="id" loading={loading} size="middle"
-        pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (t) => `Jami: ${t}` }}
+        pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (total) => t("directory.total", { n: total }) }}
         columns={[
-          { title: "Kod", dataIndex: "code", width: 120 },
-          { title: "Nomi", dataIndex: "name" },
-          { title: "Filial", dataIndex: ["branch", "name"], width: 180 },
+          { title: t("directory.departments.cols.code"), dataIndex: "code", width: 120 },
+          { title: t("directory.departments.cols.name"), dataIndex: "name" },
+          { title: t("directory.departments.cols.branch"), dataIndex: ["branch", "name"], width: 180 },
           {
             title: "", width: 80,
             render: (_: unknown, r: Department) => (
               <Space size={0}>
-                <Tooltip title="Tahrirlash">
+                <Tooltip title={t("common.edit")}>
                   <Button type="text" size="small" icon={<EditOutlined />} onClick={() => { setEditing(r); form.setFieldsValue({ ...r, branch_id: r.branch_id }); setModal(true); }} />
                 </Tooltip>
-                <Popconfirm title="Bo'limni o'chirishni tasdiqlaysizmi?" onConfirm={async () => { await deleteDepartment(r.id); message.success("O'chirildi"); fetch(); }} okText="Ha" cancelText="Yo'q">
-                  <Tooltip title="O'chirish">
+                <Popconfirm title={t("directory.departments.confirmDelete")} onConfirm={async () => { await deleteDepartment(r.id); message.success(t("directory.deleted")); fetch(); }} okText={t("common.yes")} cancelText={t("common.no")}>
+                  <Tooltip title={t("common.delete")}>
                     <Button type="text" size="small" danger icon={<DeleteOutlined />} />
                   </Tooltip>
                 </Popconfirm>
@@ -230,15 +233,15 @@ function DepartmentsTab() {
         ]}
       />
       <Modal
-        title={editing ? "Bo'limni tahrirlash" : "Yangi bo'lim"}
+        title={editing ? t("directory.departments.edit") : t("directory.departments.new")}
         open={modal} onOk={() => form.submit()}
         onCancel={() => { setModal(false); setEditing(null); }}
-        okText="Saqlash" cancelText="Bekor qilish"
+        okText={t("common.save")} cancelText={t("common.cancel")}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="name" label="Nomi" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="code" label="Kod" rules={[{ required: true }]}><Input placeholder="HQ-IT" /></Form.Item>
-          <Form.Item name="branch_id" label="Filial" rules={[{ required: true }]}>
+          <Form.Item name="name" label={t("directory.departments.fields.name")} rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item name="code" label={t("directory.departments.fields.code")} rules={[{ required: true }]}><Input placeholder="HQ-IT" /></Form.Item>
+          <Form.Item name="branch_id" label={t("directory.departments.fields.branch")} rules={[{ required: true }]}>
             <Select options={branches.map((b) => ({ value: b.id, label: b.name }))} />
           </Form.Item>
         </Form>
@@ -249,6 +252,7 @@ function DepartmentsTab() {
 
 // ─── Filiallar Tab ───
 function BranchesTab() {
+  const { t } = useT();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState(false);
@@ -274,17 +278,17 @@ function BranchesTab() {
 
   const handleSubmit = async (values: any) => {
     try {
-      if (editing) { await updateBranch(editing.id, values); message.success("Filial yangilandi"); }
-      else { await createBranch(values); message.success("Filial qo'shildi"); }
+      if (editing) { await updateBranch(editing.id, values); message.success(t("directory.branches.updated")); }
+      else { await createBranch(values); message.success(t("directory.branches.created")); }
       setModal(false); form.resetFields(); setEditing(null); fetch();
-    } catch (e: any) { message.error(e.response?.data?.detail || "Xatolik"); }
+    } catch (e: any) { message.error(e.response?.data?.detail || t("common.error")); }
   };
 
   return (
     <>
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         <Input
-          placeholder="Qidirish (nom, kod, manzil...)"
+          placeholder={t("directory.branches.searchPlaceholder")}
           prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -293,25 +297,25 @@ function BranchesTab() {
         />
         <div style={{ flex: 1 }} />
         <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setModal(true); }}>
-          Yangi filial
+          {t("directory.branches.new")}
         </Button>
       </div>
       <Table
         dataSource={filtered} rowKey="id" loading={loading} size="middle"
-        pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (t) => `Jami: ${t}` }}
+        pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (total) => t("directory.total", { n: total }) }}
         columns={[
-          { title: "Kod", dataIndex: "code", width: 100 },
-          { title: "Nomi", dataIndex: "name" },
-          { title: "Manzil", dataIndex: "address", ellipsis: true },
+          { title: t("directory.branches.cols.code"), dataIndex: "code", width: 100 },
+          { title: t("directory.branches.cols.name"), dataIndex: "name" },
+          { title: t("directory.branches.cols.address"), dataIndex: "address", ellipsis: true },
           {
             title: "", width: 80,
             render: (_: unknown, r: Branch) => (
               <Space size={0}>
-                <Tooltip title="Tahrirlash">
+                <Tooltip title={t("common.edit")}>
                   <Button type="text" size="small" icon={<EditOutlined />} onClick={() => { setEditing(r); form.setFieldsValue(r); setModal(true); }} />
                 </Tooltip>
-                <Popconfirm title="Filialni o'chirishni tasdiqlaysizmi?" onConfirm={async () => { await deleteBranch(r.id); message.success("O'chirildi"); fetch(); }} okText="Ha" cancelText="Yo'q">
-                  <Tooltip title="O'chirish">
+                <Popconfirm title={t("directory.branches.confirmDelete")} onConfirm={async () => { await deleteBranch(r.id); message.success(t("directory.deleted")); fetch(); }} okText={t("common.yes")} cancelText={t("common.no")}>
+                  <Tooltip title={t("common.delete")}>
                     <Button type="text" size="small" danger icon={<DeleteOutlined />} />
                   </Tooltip>
                 </Popconfirm>
@@ -321,15 +325,15 @@ function BranchesTab() {
         ]}
       />
       <Modal
-        title={editing ? "Filialni tahrirlash" : "Yangi filial"}
+        title={editing ? t("directory.branches.edit") : t("directory.branches.new")}
         open={modal} onOk={() => form.submit()}
         onCancel={() => { setModal(false); setEditing(null); }}
-        okText="Saqlash" cancelText="Bekor qilish"
+        okText={t("common.save")} cancelText={t("common.cancel")}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="name" label="Nomi" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="code" label="Kod" rules={[{ required: true }]}><Input placeholder="BR-01" /></Form.Item>
-          <Form.Item name="address" label="Manzil"><Input.TextArea rows={2} /></Form.Item>
+          <Form.Item name="name" label={t("directory.branches.fields.name")} rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item name="code" label={t("directory.branches.fields.code")} rules={[{ required: true }]}><Input placeholder="BR-01" /></Form.Item>
+          <Form.Item name="address" label={t("directory.branches.fields.address")}><Input.TextArea rows={2} /></Form.Item>
         </Form>
       </Modal>
     </>
@@ -338,6 +342,7 @@ function BranchesTab() {
 
 // ─── Kategoriyalar Tab ───
 function CategoriesTab() {
+  const { t } = useT();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState(false);
@@ -363,17 +368,17 @@ function CategoriesTab() {
 
   const handleSubmit = async (values: any) => {
     try {
-      if (editing) { await updateCategory(editing.id, values); message.success("Kategoriya yangilandi"); }
-      else { await createCategory(values); message.success("Kategoriya qo'shildi"); }
+      if (editing) { await updateCategory(editing.id, values); message.success(t("directory.categories.updated")); }
+      else { await createCategory(values); message.success(t("directory.categories.created")); }
       setModal(false); form.resetFields(); setEditing(null); fetch();
-    } catch (e: any) { message.error(e.response?.data?.detail || "Xatolik"); }
+    } catch (e: any) { message.error(e.response?.data?.detail || t("common.error")); }
   };
 
   return (
     <>
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         <Input
-          placeholder="Qidirish (nom, kod...)"
+          placeholder={t("directory.categories.searchPlaceholder")}
           prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -382,24 +387,24 @@ function CategoriesTab() {
         />
         <div style={{ flex: 1 }} />
         <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setModal(true); }}>
-          Yangi kategoriya
+          {t("directory.categories.new")}
         </Button>
       </div>
       <Table
         dataSource={filtered} rowKey="id" loading={loading} size="middle"
-        pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (t) => `Jami: ${t}` }}
+        pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (total) => t("directory.total", { n: total }) }}
         columns={[
-          { title: "Kod", dataIndex: "code", width: 80 },
-          { title: "Nomi", dataIndex: "name" },
-          { title: "Tavsif", dataIndex: "description", ellipsis: true },
+          { title: t("directory.categories.cols.code"), dataIndex: "code", width: 80 },
+          { title: t("directory.categories.cols.name"), dataIndex: "name" },
+          { title: t("directory.categories.cols.description"), dataIndex: "description", ellipsis: true },
           {
-            title: "Foydali muddat", dataIndex: "useful_life_months", width: 140,
-            render: (m: number) => m ? <Tag>{Math.floor(m / 12)} yil {m % 12 > 0 ? `${m % 12} oy` : ""}</Tag> : "—",
+            title: t("directory.categories.cols.usefulLife"), dataIndex: "useful_life_months", width: 140,
+            render: (m: number) => m ? <Tag>{Math.floor(m / 12)} {t("directory.categories.year")} {m % 12 > 0 ? `${m % 12} ${t("directory.categories.month")}` : ""}</Tag> : "—",
           },
           {
             title: "", width: 50,
             render: (_: unknown, r: Category) => (
-              <Tooltip title="Tahrirlash">
+              <Tooltip title={t("common.edit")}>
                 <Button type="text" size="small" icon={<EditOutlined />} onClick={() => { setEditing(r); form.setFieldsValue(r); setModal(true); }} />
               </Tooltip>
             ),
@@ -407,16 +412,16 @@ function CategoriesTab() {
         ]}
       />
       <Modal
-        title={editing ? "Kategoriyani tahrirlash" : "Yangi kategoriya"}
+        title={editing ? t("directory.categories.edit") : t("directory.categories.new")}
         open={modal} onOk={() => form.submit()}
         onCancel={() => { setModal(false); setEditing(null); }}
-        okText="Saqlash" cancelText="Bekor qilish"
+        okText={t("common.save")} cancelText={t("common.cancel")}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="name" label="Nomi" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="code" label="Kod" rules={[{ required: true }]}><Input placeholder="IT" /></Form.Item>
-          <Form.Item name="description" label="Tavsif"><Input.TextArea rows={2} /></Form.Item>
-          <Form.Item name="useful_life_months" label="Foydali xizmat muddati (oyda)">
+          <Form.Item name="name" label={t("directory.categories.fields.name")} rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item name="code" label={t("directory.categories.fields.code")} rules={[{ required: true }]}><Input placeholder="IT" /></Form.Item>
+          <Form.Item name="description" label={t("directory.categories.fields.description")}><Input.TextArea rows={2} /></Form.Item>
+          <Form.Item name="useful_life_months" label={t("directory.categories.fields.usefulLifeMonths")}>
             <InputNumber min={1} style={{ width: "100%" }} placeholder="60" />
           </Form.Item>
         </Form>
@@ -427,6 +432,7 @@ function CategoriesTab() {
 
 // ─── MAIN: Directory Page ───
 export default function Directory() {
+  const { t } = useT();
   const [counts, setCounts] = useState({ employees: 0, departments: 0, branches: 0, categories: 0 });
 
   useEffect(() => {
@@ -446,7 +452,7 @@ export default function Directory() {
       key: "employees",
       label: (
         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <TeamOutlined /> Xodimlar
+          <TeamOutlined /> {t("directory.tabs.employees")}
           <Badge count={counts.employees} style={{ backgroundColor: "#0958D9" }} overflowCount={999} />
         </span>
       ),
@@ -456,7 +462,7 @@ export default function Directory() {
       key: "departments",
       label: (
         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <ApartmentOutlined /> Bo'limlar
+          <ApartmentOutlined /> {t("directory.tabs.departments")}
           <Badge count={counts.departments} style={{ backgroundColor: "#0958D9" }} overflowCount={999} />
         </span>
       ),
@@ -466,7 +472,7 @@ export default function Directory() {
       key: "branches",
       label: (
         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <BankOutlined /> Filiallar
+          <BankOutlined /> {t("directory.tabs.branches")}
           <Badge count={counts.branches} style={{ backgroundColor: "#0958D9" }} overflowCount={999} />
         </span>
       ),
@@ -476,7 +482,7 @@ export default function Directory() {
       key: "categories",
       label: (
         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <AppstoreOutlined /> Kategoriyalar
+          <AppstoreOutlined /> {t("directory.tabs.categories")}
           <Badge count={counts.categories} style={{ backgroundColor: "#0958D9" }} overflowCount={999} />
         </span>
       ),

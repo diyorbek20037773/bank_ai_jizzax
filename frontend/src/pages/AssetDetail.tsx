@@ -16,6 +16,7 @@ import {
 import type { Asset, Assignment, AuditLog, Employee } from "../types";
 import { STATUS_CONFIG, ALLOWED_TRANSITIONS, API_BASE } from "../utils/constants";
 import { useAuth } from "../context/AuthContext";
+import { useT } from "../i18n/I18nProvider";
 import dayjs from "dayjs";
 
 const ACTION_COLORS: Record<string, string> = {
@@ -30,6 +31,7 @@ const ACTION_COLORS: Record<string, string> = {
 export default function AssetDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useT();
   const { user } = useAuth();
   const isUser = user?.role === "user";
   const [asset, setAsset] = useState<Asset | null>(null);
@@ -68,18 +70,18 @@ export default function AssetDetail() {
   const handleStatusChange = async () => {
     if (!asset || !newStatus) return;
     if (!statusReason.trim()) {
-      message.warning("Sabab kiritish majburiy!");
+      message.warning(t("assetDetail.reasonRequired"));
       return;
     }
     try {
       await changeAssetStatus(asset.id, newStatus, statusReason);
-      message.success("Status o'zgartirildi");
+      message.success(t("assetDetail.statusChanged"));
       setStatusModal(false);
       setNewStatus("");
       setStatusReason("");
       fetchData();
     } catch (e: any) {
-      message.error(e.response?.data?.detail || "Xatolik");
+      message.error(e.response?.data?.detail || t("common.error"));
     }
   };
 
@@ -87,23 +89,23 @@ export default function AssetDetail() {
     if (!asset || !selectedEmployee) return;
     try {
       await assignAsset({ asset_id: asset.id, employee_id: selectedEmployee, notes: assignNotes });
-      message.success("Aktiv biriktirildi");
+      message.success(t("assetDetail.assetAssigned"));
       setAssignModal(false);
       setSelectedEmployee(null);
       setAssignNotes("");
       fetchData();
     } catch (e: any) {
-      message.error(e.response?.data?.detail || "Xatolik");
+      message.error(e.response?.data?.detail || t("common.error"));
     }
   };
 
   const handleReturn = async (assignmentId: number) => {
     try {
       await returnAsset(assignmentId);
-      message.success("Aktiv qaytarildi");
+      message.success(t("assetDetail.assetReturned"));
       fetchData();
     } catch (e: any) {
-      message.error(e.response?.data?.detail || "Xatolik");
+      message.error(e.response?.data?.detail || t("common.error"));
     }
   };
 
@@ -117,15 +119,15 @@ export default function AssetDetail() {
     return (
       <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: 400, gap: 16 }}>
         <Spin size="large" />
-        <span style={{ fontSize: 13, color: "#8C8C8C", fontWeight: 450 }}>Aktiv ma'lumotlari yuklanmoqda...</span>
+        <span style={{ fontSize: 13, color: "#8C8C8C", fontWeight: 450 }}>{t("assetDetail.loadingAsset")}</span>
       </div>
     );
   }
   if (!asset) return (
     <div style={{ textAlign: "center", padding: "64px 24px" }}>
       <div style={{ fontSize: 48, color: "#D9D9D9", marginBottom: 16 }}>!</div>
-      <div style={{ fontSize: 16, fontWeight: 600, color: "#141414", marginBottom: 8 }}>Aktiv topilmadi</div>
-      <div style={{ fontSize: 13, color: "#8C8C8C" }}>So'ralgan aktiv bazada mavjud emas</div>
+      <div style={{ fontSize: 16, fontWeight: 600, color: "#141414", marginBottom: 8 }}>{t("assetDetail.notFound")}</div>
+      <div style={{ fontSize: 13, color: "#8C8C8C" }}>{t("assetDetail.notFoundDesc")}</div>
     </div>
   );
 
@@ -143,27 +145,27 @@ export default function AssetDetail() {
             color={STATUS_CONFIG[asset.status]?.color}
             style={{ fontSize: 13, padding: "3px 14px", borderRadius: 6, fontWeight: 600, letterSpacing: "0.02em" }}
           >
-            {STATUS_CONFIG[asset.status]?.label}
+            {t(`common.statuses.${asset.status}`)}
           </Tag>
         </div>
         {!isUser && (
           <div className="detail-actions">
             <Button icon={<EditOutlined />} onClick={() => navigate(`/assets/${asset.id}/edit`)}>
-              Tahrirlash
+              {t("common.edit")}
             </Button>
             {allowedStatuses.length > 0 && (
               <Button icon={<SwapOutlined />} onClick={() => setStatusModal(true)}>
-                Status o'zgartirish
+                {t("assetDetail.changeStatus")}
               </Button>
             )}
             {asset.status !== "ASSIGNED" && allowedStatuses.includes("ASSIGNED") && (
               <Button type="primary" icon={<UserAddOutlined />} onClick={openAssignModal}>
-                Biriktirish
+                {t("assetDetail.assign")}
               </Button>
             )}
             {activeAssignment && (
-              <Popconfirm title="Qaytarishni tasdiqlaysizmi?" onConfirm={() => handleReturn(activeAssignment.id)}>
-                <Button icon={<RollbackOutlined />} danger>Qaytarish</Button>
+              <Popconfirm title={t("assetDetail.returnConfirm")} onConfirm={() => handleReturn(activeAssignment.id)}>
+                <Button icon={<RollbackOutlined />} danger>{t("assetDetail.return")}</Button>
               </Popconfirm>
             )}
           </div>
@@ -172,48 +174,48 @@ export default function AssetDetail() {
 
       <Row gutter={[20, 20]}>
         <Col xs={24} lg={17}>
-          <Card className="detail-main-card" title="Aktiv ma'lumotlari">
+          <Card className="detail-main-card" title={t("assetDetail.assetInfo")}>
             <div className="info-grid">
               <div className="info-item">
-                <div className="info-label">Inventar raqami</div>
+                <div className="info-label">{t("assetDetail.inventoryNumber")}</div>
                 <div className="info-value">
                   <Typography.Text copyable strong>{asset.inventory_number}</Typography.Text>
                 </div>
               </div>
               <div className="info-item">
-                <div className="info-label">Seriya raqami</div>
+                <div className="info-label">{t("assetDetail.serialNumber")}</div>
                 <div className="info-value">{asset.serial_number || "—"}</div>
               </div>
               <div className="info-item">
-                <div className="info-label">Kategoriya</div>
+                <div className="info-label">{t("common.category")}</div>
                 <div className="info-value">
                   <Tag color="blue" style={{ borderRadius: 6 }}>{asset.category?.name}</Tag>
                 </div>
               </div>
               <div className="info-item">
-                <div className="info-label">Holati</div>
+                <div className="info-label">{t("assetDetail.condition")}</div>
                 <div className="info-value">
-                  <Tag color={STATUS_CONFIG[asset.status]?.color} style={{ borderRadius: 6 }}>{STATUS_CONFIG[asset.status]?.label}</Tag>
+                  <Tag color={STATUS_CONFIG[asset.status]?.color} style={{ borderRadius: 6 }}>{t(`common.statuses.${asset.status}`)}</Tag>
                 </div>
               </div>
               <div className="info-item">
-                <div className="info-label">Sotib olingan sana</div>
+                <div className="info-label">{t("assetDetail.purchaseDate")}</div>
                 <div className="info-value">{asset.purchase_date ? dayjs(asset.purchase_date).format("DD.MM.YYYY") : "—"}</div>
               </div>
               <div className="info-item">
-                <div className="info-label">Boshlang'ich narxi</div>
+                <div className="info-label">{t("assetDetail.purchasePrice")}</div>
                 <div className="info-value" style={{ fontWeight: 600 }}>
-                  {asset.purchase_price ? `${Number(asset.purchase_price).toLocaleString("ru-RU")} so'm` : "—"}
+                  {asset.purchase_price ? `${Number(asset.purchase_price).toLocaleString("ru-RU")} ${t("common.currency")}` : "—"}
                 </div>
               </div>
               <div className="info-item">
-                <div className="info-label">Hozirgi qiymati</div>
+                <div className="info-label">{t("assetDetail.currentValue")}</div>
                 <div className="info-value" style={{ fontWeight: 600, color: "#0958D9" }}>
-                  {asset.current_value != null ? `${Number(asset.current_value).toLocaleString("ru-RU")} so'm` : "—"}
+                  {asset.current_value != null ? `${Number(asset.current_value).toLocaleString("ru-RU")} ${t("common.currency")}` : "—"}
                 </div>
               </div>
               <div className="info-item">
-                <div className="info-label">Kafolat muddati</div>
+                <div className="info-label">{t("assetDetail.warrantyExpiry")}</div>
                 <div className="info-value" style={{
                   fontWeight: 500,
                   color: asset.warranty_expiry
@@ -224,26 +226,26 @@ export default function AssetDetail() {
                 </div>
               </div>
               <div className="info-item">
-                <div className="info-label">Mas'ul xodim</div>
+                <div className="info-label">{t("assetDetail.responsibleEmployee")}</div>
                 <div className="info-value">
-                  {asset.current_employee?.full_name || <span style={{ color: "#bfbfbf" }}>Biriktirilmagan</span>}
+                  {asset.current_employee?.full_name || <span style={{ color: "#bfbfbf" }}>{t("assetDetail.notAssigned")}</span>}
                 </div>
               </div>
               <div className="info-item">
-                <div className="info-label">Bo'lim</div>
+                <div className="info-label">{t("assetDetail.department")}</div>
                 <div className="info-value">{asset.current_department?.name || <span style={{ color: "#bfbfbf" }}>—</span>}</div>
               </div>
               <div className="info-item">
-                <div className="info-label">Filial</div>
+                <div className="info-label">{t("assetDetail.branch")}</div>
                 <div className="info-value">{asset.current_branch?.name || <span style={{ color: "#bfbfbf" }}>—</span>}</div>
               </div>
               <div className="info-item">
-                <div className="info-label">Ro'yxatga olingan</div>
+                <div className="info-label">{t("assetDetail.registeredAt")}</div>
                 <div className="info-value">{dayjs(asset.created_at).format("DD.MM.YYYY HH:mm")}</div>
               </div>
               {asset.notes && (
                 <div className="info-item" style={{ gridColumn: "1 / -1" }}>
-                  <div className="info-label">Izoh</div>
+                  <div className="info-label">{t("assetDetail.notes")}</div>
                   <div className="info-value" style={{ fontWeight: 400 }}>{asset.notes}</div>
                 </div>
               )}
@@ -251,7 +253,7 @@ export default function AssetDetail() {
           </Card>
         </Col>
         <Col xs={24} lg={7}>
-          <Card title="QR Kod" size="small">
+          <Card title={t("assetDetail.qrCode")} size="small">
             <div className="qr-display-card">
               <Image src={qrUrl} width={160} preview={false} style={{ borderRadius: 8 }} />
               <div style={{ marginTop: 10 }}>
@@ -261,13 +263,13 @@ export default function AssetDetail() {
               </div>
               <Space style={{ marginTop: 10 }}>
                 <a href={qrUrl} download={`${asset.inventory_number}.png`}>
-                  <Button icon={<DownloadOutlined />} size="small">Yuklab olish</Button>
+                  <Button icon={<DownloadOutlined />} size="small">{t("assetDetail.download")}</Button>
                 </a>
               </Space>
             </div>
           </Card>
           {asset.photo_path && (
-            <Card title="Rasm" size="small" style={{ marginTop: 16 }}>
+            <Card title={t("assetDetail.photo")} size="small" style={{ marginTop: 16 }}>
               <Image
                 src={`${API_BASE}${asset.photo_path}`}
                 width="100%"
@@ -280,31 +282,31 @@ export default function AssetDetail() {
 
       <Row gutter={[20, 20]} style={{ marginTop: 20 }}>
         <Col xs={24} lg={12}>
-          <Card className="chart-card" title="Biriktirish tarixi" size="small">
+          <Card className="chart-card" title={t("assetDetail.assignmentHistory")} size="small">
             <Table
               dataSource={assignments}
               rowKey="id"
               size="small"
               pagination={false}
               columns={[
-                { title: "Xodim", dataIndex: ["employee", "full_name"], width: 140 },
-                { title: "Bo'lim", dataIndex: ["department", "name"], width: 120 },
+                { title: t("assetDetail.employee"), dataIndex: ["employee", "full_name"], width: 140 },
+                { title: t("assetDetail.department"), dataIndex: ["department", "name"], width: 120 },
                 {
-                  title: "Berilgan", dataIndex: "assigned_at", width: 100,
+                  title: t("assetDetail.assignedAt"), dataIndex: "assigned_at", width: 100,
                   render: (v: string) => dayjs(v).format("DD.MM.YYYY"),
                 },
                 {
-                  title: "Qaytarilgan", dataIndex: "returned_at", width: 110,
+                  title: t("assetDetail.returnedAt"), dataIndex: "returned_at", width: 110,
                   render: (v: string) => v
                     ? dayjs(v).format("DD.MM.YYYY")
-                    : <Tag color="green" style={{ borderRadius: 6 }}>Hozirda</Tag>,
+                    : <Tag color="green" style={{ borderRadius: 6 }}>{t("assetDetail.currentlyHeld")}</Tag>,
                 },
               ]}
             />
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card className="chart-card" title="Audit tarixi" size="small">
+          <Card className="chart-card" title={t("assetDetail.auditHistory")} size="small">
             <div style={{ maxHeight: 400, overflow: "auto", padding: "8px 0" }}>
               <Timeline
                 items={auditLogs.slice(0, 20).map((log) => ({
@@ -338,28 +340,28 @@ export default function AssetDetail() {
       </Row>
 
       <Modal
-        title="Status o'zgartirish"
+        title={t("assetDetail.changeStatus")}
         open={statusModal}
         onOk={handleStatusChange}
         onCancel={() => setStatusModal(false)}
-        okText="O'zgartirish"
-        cancelText="Bekor qilish"
+        okText={t("assetDetail.changeAction")}
+        cancelText={t("common.cancel")}
       >
         <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 8, background: "#FAFBFC", border: "1px solid #F0F0F0" }}>
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>Hozirgi status:</Typography.Text>{" "}
-          <Tag color={STATUS_CONFIG[asset.status]?.color} style={{ borderRadius: 6, fontWeight: 600 }}>{STATUS_CONFIG[asset.status]?.label}</Tag>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>{t("assetDetail.currentStatus")}</Typography.Text>{" "}
+          <Tag color={STATUS_CONFIG[asset.status]?.color} style={{ borderRadius: 6, fontWeight: 600 }}>{t(`common.statuses.${asset.status}`)}</Tag>
         </div>
         <Select
-          placeholder="Yangi status tanlang"
+          placeholder={t("assetDetail.selectNewStatus")}
           style={{ width: "100%", marginBottom: 14 }}
           value={newStatus || undefined}
           onChange={setNewStatus}
           options={allowedStatuses.map((s) => ({
-            value: s, label: STATUS_CONFIG[s]?.label || s,
+            value: s, label: t(`common.statuses.${s}`) || s,
           }))}
         />
         <Input.TextArea
-          placeholder="Sabab (majburiy)"
+          placeholder={t("assetDetail.reasonPlaceholder")}
           value={statusReason}
           onChange={(e) => setStatusReason(e.target.value)}
           rows={3}
@@ -368,15 +370,15 @@ export default function AssetDetail() {
       </Modal>
 
       <Modal
-        title="Xodimga biriktirish"
+        title={t("assetDetail.assignToEmployee")}
         open={assignModal}
         onOk={handleAssign}
         onCancel={() => setAssignModal(false)}
-        okText="Biriktirish"
-        cancelText="Bekor qilish"
+        okText={t("assetDetail.assign")}
+        cancelText={t("common.cancel")}
       >
         <Select
-          placeholder="Xodimni tanlang"
+          placeholder={t("assetDetail.selectEmployee")}
           showSearch
           optionFilterProp="label"
           style={{ width: "100%", marginBottom: 12 }}
@@ -387,7 +389,7 @@ export default function AssetDetail() {
           }))}
         />
         <Input.TextArea
-          placeholder="Izoh (ixtiyoriy)"
+          placeholder={t("assetDetail.notesOptional")}
           value={assignNotes}
           onChange={(e) => setAssignNotes(e.target.value)}
           rows={3}
