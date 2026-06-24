@@ -46,6 +46,14 @@ const AUDIENCE = [
   { icon: <UserOutlined />, key: "a4", color: "#FA8C16" },
 ];
 
+const TEAM = [
+  { name: "Eldor Musayev", photo: "/team/m1.jpg", roleKey: "r1" },
+  { name: "Berdimurodov Soibnazar", photo: "/team/m2.jpg", roleKey: "r2" },
+  { name: "Gulmurodov Shohrux", photo: "/team/m3.jpg", roleKey: "r3" },
+  { name: "Burxonov Sardor", photo: "/team/m4.jpg", roleKey: "r4" },
+  { name: "Hulkar Musayeva", photo: "/team/m5.jpg", roleKey: "r5" },
+];
+
 export default function Landing() {
   const navigate = useNavigate();
   const { t, lang, setLang } = useT();
@@ -180,6 +188,20 @@ export default function Landing() {
         <h2 className="landing-h2">{t("landing.techTitle")}</h2>
         <div className="landing-tech">
           {TECH.map((tch) => <span className="landing-tech-badge" key={tch}>{tch}</span>)}
+        </div>
+      </section>
+
+      {/* TEAM */}
+      <section className="landing-section">
+        <h2 className="landing-h2">{t("landing.teamTitle")}</h2>
+        <div className="landing-team">
+          {TEAM.map((m) => (
+            <div className="team-card" key={m.name}>
+              <img className="team-photo" src={m.photo} alt={m.name} loading="lazy" />
+              <div className="team-name">{m.name}</div>
+              <div className="team-role">{t(`landing.${m.roleKey}`)}</div>
+            </div>
+          ))}
         </div>
       </section>
 
