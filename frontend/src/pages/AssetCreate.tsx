@@ -5,10 +5,10 @@ import {
 } from "antd";
 import {
   ArrowLeftOutlined, UploadOutlined, SaveOutlined, PlusOutlined,
-  RobotOutlined, ThunderboltOutlined, CheckCircleOutlined,
+  RobotOutlined, ThunderboltOutlined, CheckCircleOutlined, CameraOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
-import { createAsset, updateAsset, getAsset, getCategories, uploadPhoto, aiSuggestCategory, aiAutoFill } from "../api";
+import { createAsset, updateAsset, getAsset, getCategories, uploadPhoto, aiSuggestCategory, aiAutoFill, aiVisionFill } from "../api";
 import type { Category } from "../types";
 import dayjs from "dayjs";
 import { useT } from "../i18n/I18nProvider";
@@ -35,6 +35,7 @@ export default function AssetForm() {
     description: string | null; estimated_price_uzs: number | null;
     confidence: number; reason: string;
   } | null>(null);
+  const [visionLoading, setVisionLoading] = useState(false);
 
   useEffect(() => {
     getCategories().then((r) => setCategories(r.data));
@@ -139,6 +140,32 @@ export default function AssetForm() {
     }
   };
 
+  const handleVisionFill = async (file: File) => {
+    setVisionLoading(true);
+    setAutoFillResult(null);
+    try {
+      const { data } = await aiVisionFill(file);
+      if (data.name) form.setFieldValue("name", data.name);
+      if (data.category_id) form.setFieldValue("category_id", data.category_id);
+      if (data.description) form.setFieldValue("description", data.description);
+      if (data.estimated_price_uzs) form.setFieldValue("purchase_price", data.estimated_price_uzs);
+      setAutoFillResult({
+        category_id: data.category_id,
+        category_name: data.category_name,
+        description: data.description,
+        estimated_price_uzs: data.estimated_price_uzs,
+        confidence: data.confidence,
+        reason: data.reason,
+      });
+      message.success(t("assetForm.visionFilled", { confidence: data.confidence }));
+    } catch {
+      message.info(t("assetForm.aiUnavailable"));
+    } finally {
+      setVisionLoading(false);
+    }
+    return false;
+  };
+
   return (
     <div className="animate-in">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
@@ -194,19 +221,30 @@ export default function AssetForm() {
                 </div>
               </div>
             </div>
-            <Button
-              type="primary"
-              icon={autoFillLoading ? undefined : <RobotOutlined />}
-              loading={autoFillLoading}
-              onClick={handleAutoFill}
-              style={{
-                background: "linear-gradient(135deg, #722ED1, #531DAB)",
-                borderColor: "#722ED1",
-                borderRadius: 8,
-              }}
-            >
-              {t("assetForm.aiAutoFillBtn")}
-            </Button>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <Upload beforeUpload={handleVisionFill} maxCount={1} accept="image/*" showUploadList={false}>
+                <Button
+                  icon={visionLoading ? undefined : <CameraOutlined />}
+                  loading={visionLoading}
+                  style={{ borderColor: "#722ED1", color: "#531DAB", borderRadius: 8 }}
+                >
+                  {t("assetForm.visionBtn")}
+                </Button>
+              </Upload>
+              <Button
+                type="primary"
+                icon={autoFillLoading ? undefined : <RobotOutlined />}
+                loading={autoFillLoading}
+                onClick={handleAutoFill}
+                style={{
+                  background: "linear-gradient(135deg, #722ED1, #531DAB)",
+                  borderColor: "#722ED1",
+                  borderRadius: 8,
+                }}
+              >
+                {t("assetForm.aiAutoFillBtn")}
+              </Button>
+            </div>
           </div>
 
           {/* Auto-fill result */}

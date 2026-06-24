@@ -13,8 +13,10 @@ import QRScanPage from "./pages/QRScanPage";
 import Directory from "./pages/Directory";
 import AuditLog from "./pages/AuditLog";
 import AIAnalytics from "./pages/AIAnalytics";
+import AIReport from "./pages/AIReport";
 import MyAssets from "./pages/MyAssets";
 import AdminRequests from "./pages/AdminRequests";
+import Landing from "./pages/Landing";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -26,9 +28,20 @@ function AppRoutes() {
   const { isAuthenticated, user } = useAuth();
   const isUser = user?.role === "user";
 
+  // Tizimga kirmagan foydalanuvchi uchun: Landing + Login
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    );
+  }
+
   return (
     <Routes>
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/login" element={<Navigate to="/" replace />} />
       <Route
         element={
           <ProtectedRoute>
@@ -55,7 +68,8 @@ function AppRoutes() {
             <Route path="/scan" element={<QRScanPage />} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/ai-analytics" element={<AIAnalytics />} />
-<Route path="/audit-log" element={<AuditLog />} />
+            <Route path="/ai-report" element={<AIReport />} />
+            <Route path="/audit-log" element={<AuditLog />} />
           </>
         )}
       </Route>

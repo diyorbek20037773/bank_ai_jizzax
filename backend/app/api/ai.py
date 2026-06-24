@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from google.genai import errors as genai_errors
@@ -141,6 +141,40 @@ def auto_fill(
         raise HTTPException(status_code=400, detail="Aktiv nomi bo'sh bo'lishi mumkin emas")
     try:
         return ai_service.auto_fill_asset(db, req.name.strip())
+    except HTTPException:
+        raise
+    except Exception as e:
+        _handle_ai_error(e)
+
+
+@router.post("/vision-fill")
+async def vision_fill(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_auth),
+):
+    """Aktiv rasmidan AI Vision orqali maydonlarni aniqlash va to'ldirish."""
+    _check_api_key()
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="Rasm bo'sh bo'lishi mumkin emas")
+    try:
+        return ai_service.auto_fill_from_image(db, data, file.content_type or "image/jpeg")
+    except HTTPException:
+        raise
+    except Exception as e:
+        _handle_ai_error(e)
+
+
+@router.get("/report")
+def report(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_auth),
+):
+    """AI tomonidan yoziladigan boshqaruv hisoboti (Executive Report)."""
+    _check_api_key()
+    try:
+        return ai_service.generate_report(db)
     except HTTPException:
         raise
     except Exception as e:

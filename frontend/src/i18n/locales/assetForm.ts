@@ -33,6 +33,8 @@ export default {
     aiSuggestion: "AI tavsiyasi: {category} ({confidence}%)",
     aiUnavailable: "AI xizmati hozircha mavjud emas",
     aiFilledFields: "AI {confidence}% ishonch bilan maydonlarni to'ldirdi",
+    visionBtn: "Rasmdan to'ldirish",
+    visionFilled: "AI rasmdan {confidence}% ishonch bilan aniqladi",
   },
   ru: {
     createTitle: "Новый актив",
@@ -68,6 +70,8 @@ export default {
     aiSuggestion: "Рекомендация AI: {category} ({confidence}%)",
     aiUnavailable: "Сервис AI пока недоступен",
     aiFilledFields: "AI заполнил поля с уверенностью {confidence}%",
+    visionBtn: "Заполнить по фото",
+    visionFilled: "AI распознал по фото с уверенностью {confidence}%",
   },
   en: {
     createTitle: "New asset",
@@ -103,5 +107,7 @@ export default {
     aiSuggestion: "AI suggestion: {category} ({confidence}%)",
     aiUnavailable: "AI service is currently unavailable",
     aiFilledFields: "AI filled the fields with {confidence}% confidence",
+    visionBtn: "Fill from photo",
+    visionFilled: "AI recognized from photo with {confidence}% confidence",
   },
 };

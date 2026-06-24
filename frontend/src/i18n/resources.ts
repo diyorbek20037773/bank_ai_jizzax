@@ -11,6 +11,8 @@ import ai from "./locales/ai";
 import requests from "./locales/requests";
 import qr from "./locales/qr";
 import myAssets from "./locales/myAssets";
+import report from "./locales/report";
+import landing from "./locales/landing";
 
 export const LANGS = ["uz", "ru", "en"] as const;
 export type Lang = (typeof LANGS)[number];
@@ -42,6 +44,8 @@ const modules: Record<string, any> = {
   requests,
   qr,
   myAssets,
+  report,
+  landing,
 };
 
 type Dict = Record<string, any>;

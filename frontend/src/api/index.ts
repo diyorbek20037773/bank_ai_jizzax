@@ -109,6 +109,26 @@ export const aiAutoFill = (name: string) =>
     _attempts?: any[];
   }>("/api/ai/auto-fill", { name });
 
+export const aiVisionFill = (file: File) => {
+  const fd = new FormData();
+  fd.append("file", file);
+  return api.post<{
+    name: string | null; category_id: number | null; category_name: string | null;
+    description: string | null; condition: string | null;
+    estimated_price_uzs: number | null; useful_life_months: number | null;
+    confidence: number; reason: string; _attempts?: any[];
+  }>("/api/ai/vision-fill", fd);
+};
+
+export const aiReport = () =>
+  api.get<{
+    title: string; summary: string;
+    key_metrics: { label: string; value: string }[];
+    sections: { heading: string; body: string }[];
+    recommendations: string[];
+    _attempts?: any[];
+  }>("/api/ai/report");
+
 // Requests (user -> admin)
 export const createRequest = (data: {
   asset_id?: number; request_type: string;

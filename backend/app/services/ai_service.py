@@ -99,8 +99,14 @@ def _mark_rate_limited(key_idx: int, model: str):
     _rate_limited[(key_idx, model)] = time.time()
 
 
-def _ask_ai(system_prompt: str, user_message: str) -> dict:
+def _ask_ai(
+    system_prompt: str,
+    user_message: str,
+    image_bytes: bytes | None = None,
+    image_mime: str = "image/jpeg",
+) -> dict:
     """AI ga so'rov yuborish. Barcha key va modellarni sinab ko'radi.
+    image_bytes berilsa — multimodal (rasm) so'rov yuboriladi.
     Returns: {"text": str, "attempts": list[dict]} — natija va urinishlar tarixi.
     """
     keys = _get_api_keys()
@@ -140,9 +146,18 @@ def _ask_ai(system_prompt: str, user_message: str) -> dict:
                 # (pro thinking_budget=0 ni qabul qilmaydi — unga tegmaymiz.)
                 if model.startswith("gemini-2.5-flash") and hasattr(types, "ThinkingConfig"):
                     cfg_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+
+                if image_bytes:
+                    contents = [
+                        types.Part.from_bytes(data=image_bytes, mime_type=image_mime),
+                        user_message,
+                    ]
+                else:
+                    contents = user_message
+
                 response = client.models.generate_content(
                     model=model,
-                    contents=user_message,
+                    contents=contents,
                     config=types.GenerateContentConfig(**cfg_kwargs),
                 )
                 result_text = response.text or ""
@@ -1140,6 +1155,121 @@ Barcha maydonlarni to'ldir."""
         "description": None, "estimated_price_uzs": None,
         "useful_life_months": None, "confidence": 0,
         "reason": "AI tahlil qila olmadi"
+    }
+    result["_attempts"] = ai_result["attempts"]
+    return result
+
+
+# ──────────────────────────────────────────────
+# 6b. AI Vision — rasmdan aktivni aniqlash va to'ldirish
+# ──────────────────────────────────────────────
+def auto_fill_from_image(db: Session, image_bytes: bytes, image_mime: str = "image/jpeg") -> dict:
+    """Aktiv rasmidan (foto) AI orqali nomi va barcha maydonlarni aniqlash."""
+    categories = db.query(AssetCategory).filter(AssetCategory.is_active == True).all()
+    cat_list = [{"id": c.id, "name": c.name, "code": c.code,
+                 "useful_life_months": c.useful_life_months}
+                for c in categories]
+
+    system = """Sen bank ofisi aktiv boshqaruv tizimining AI Vision yordamchisisan.
+Senga aktiv (kompyuter, mebel, texnika, jihoz va h.k.) rasmi beriladi.
+Vazifang: rasmni tahlil qilib, aktivni aniqlash va maydonlarni to'ldirish.
+
+Javobni FAQAT JSON formatda ber:
+{
+  "name": "<aniqlangan aktiv nomi, masalan 'Dell Latitude 5540 noutbuki'>",
+  "category_id": <int yoki null>,
+  "category_name": "<str>",
+  "description": "<rasmda ko'ringan aktivni tavsiflovchi 1-2 jumla o'zbekchada>",
+  "condition": "<holati: yangi/yaxshi/o'rtacha/eskirgan>",
+  "estimated_price_uzs": <taxminiy narx so'mda yoki null>,
+  "useful_life_months": <foydali umr oyda yoki null>,
+  "confidence": <0-100>,
+  "reason": "<rasmda nimani ko'rdingiz, qisqa o'zbekchada>"
+}
+
+Qoidalar:
+- category_id mavjud kategoriyalar ichidan eng mosini tanla
+- Brend/model ko'rinsa nomiga qo'sh
+- Narxni O'zbekiston bozoriga yaqin taxmin qil (so'mda)
+- Agar rasm noaniq bo'lsa, confidence ni past qo'y"""
+
+    user_msg = f"""Mavjud kategoriyalar: {json.dumps(cat_list, ensure_ascii=False)}
+
+Berilgan rasmdagi bank aktivini aniqla va barcha maydonlarni to'ldir."""
+
+    ai_result = _ask_ai(system, user_msg, image_bytes=image_bytes, image_mime=image_mime)
+    parsed = _parse_json(ai_result["text"])
+    result = parsed or {
+        "name": None, "category_id": None, "category_name": None,
+        "description": None, "condition": None, "estimated_price_uzs": None,
+        "useful_life_months": None, "confidence": 0,
+        "reason": "AI rasmni tahlil qila olmadi"
+    }
+    result["_attempts"] = ai_result["attempts"]
+    return result
+
+
+# ──────────────────────────────────────────────
+# 8. AI Boshqaruv hisoboti (Executive Report)
+# ──────────────────────────────────────────────
+def generate_report(db: Session) -> dict:
+    """Butun inventar bo'yicha AI tomonidan yoziladigan boshqaruv hisoboti."""
+    from app.services import statistics_service as stats
+
+    overview = stats.get_overview(db)
+    by_category = stats.get_by_category(db)
+    by_status = stats.get_by_status(db)
+    by_department = stats.get_by_department(db)
+    aging = stats.get_aging_assets(db)
+    warranty = stats.get_warranty_expiring(db, 60)
+
+    context = {
+        "umumiy": {
+            "jami_aktivlar": overview.get("total_assets", 0),
+            "umumiy_qiymat_som": float(overview.get("total_value", 0) or 0),
+            "biriktirilgan": overview.get("assigned", 0),
+            "tamirda": overview.get("in_repair", 0),
+            "yoqolgan": overview.get("lost", 0),
+            "hisobdan_chiqarilgan": overview.get("written_off", 0),
+            "royxatda": overview.get("registered", 0),
+            "kafolati_tugayotgan_30kun": overview.get("expiring_warranty_count", 0),
+        },
+        "kategoriya_boyicha": by_category,
+        "status_boyicha": by_status,
+        "bolim_boyicha": by_department[:10],
+        "eskirgan_aktivlar_soni": len(aging),
+        "eskirgan_aktivlar_namuna": aging[:8],
+        "kafolati_tugayotganlar_namuna": warranty[:8],
+    }
+
+    system = """Sen bank ofisi aktivlari bo'yicha tajribali moliyaviy tahlilchisan.
+Senga inventar statistikasi beriladi. Professional BOSHQARUV HISOBOTI yoz.
+
+Javobni FAQAT JSON formatda ber:
+{
+  "title": "<hisobot sarlavhasi>",
+  "summary": "<umumiy xulosa, 3-5 jumla>",
+  "key_metrics": [{"label": "<ko'rsatkich>", "value": "<qiymat>"}],
+  "sections": [{"heading": "<bo'lim sarlavhasi>", "body": "<batafsil tahlil matni>"}],
+  "recommendations": ["<aniq tavsiya 1>", "<tavsiya 2>", "..."]
+}
+
+Qoidalar:
+- FAQAT o'zbek tilida yoz
+- 4-6 ta section bo'lsin: umumiy holat, status tahlili, eskirgan aktivlar, kafolat, xavflar, moliyaviy
+- key_metrics — 4-6 ta eng muhim raqam
+- recommendations — 4-6 ta amaliy, aniq tavsiya
+- Raqamlarni aniq ishlat, professional ohang
+- Markdown ishlatma, oddiy matn"""
+
+    user_msg = f"Inventar ma'lumotlari:\n{json.dumps(context, ensure_ascii=False, indent=2)}\n\nBoshqaruv hisobotini yoz."
+
+    ai_result = _ask_ai(system, user_msg)
+    parsed = _parse_json(ai_result["text"])
+    result = parsed or {
+        "title": "Boshqaruv hisoboti",
+        "summary": "AI hisobotni shakllantira olmadi. Qayta urinib ko'ring.",
+        "key_metrics": [], "sections": [], "recommendations": [],
     }
     result["_attempts"] = ai_result["attempts"]
     return result

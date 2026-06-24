@@ -5,7 +5,7 @@ import {
   DatabaseOutlined, AuditOutlined, LogoutOutlined,
   MenuFoldOutlined, MenuUnfoldOutlined,
   SafetyOutlined, RobotOutlined, BellOutlined,
-  SendOutlined, GithubOutlined, BulbOutlined, BulbFilled,
+  SendOutlined, GithubOutlined, BulbOutlined, BulbFilled, FileTextOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -54,6 +54,7 @@ export default function AppLayout() {
     { type: "divider" as const },
     { key: "/directory", icon: <DatabaseOutlined />, label: t("menu.data") },
     { key: "/ai-analytics", icon: <RobotOutlined />, label: t("menu.aiAnalysis") },
+    { key: "/ai-report", icon: <FileTextOutlined />, label: t("menu.aiReport") },
     { key: "/audit-log", icon: <AuditOutlined />, label: t("menu.auditLog") },
   ];
 
