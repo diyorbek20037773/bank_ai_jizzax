@@ -104,6 +104,7 @@ def _ask_ai(
     user_message: str,
     image_bytes: bytes | None = None,
     image_mime: str = "image/jpeg",
+    max_tokens: int = 2048,
 ) -> dict:
     """AI ga so'rov yuborish. Barcha key va modellarni sinab ko'radi.
     image_bytes berilsa — multimodal (rasm) so'rov yuboriladi.
@@ -139,7 +140,7 @@ def _ask_ai(
                 cfg_kwargs = dict(
                     system_instruction=system_prompt,
                     temperature=0.3,
-                    max_output_tokens=2048,
+                    max_output_tokens=max_tokens,
                     response_mime_type="application/json",
                 )
                 # Tezlik uchun: 2.5-flash / flash-lite da "thinking" ni o'chiramiz.
@@ -193,11 +194,11 @@ def _ask_ai(
                     attempts[-1]["step"] = f"{key_label} — kalit muammosi, keyingisiga o'tilmoqda..."
                     break  # keyingi key ga o'tish
                 else:
-                    # Boshqa har qanday xato (5xx, timeout, ulanish) — to'xtatmaymiz,
-                    # shu key bilan keyingi modelni / keyingi keyni sinaymiz
+                    # Boshqa har qanday xato (5xx, timeout, ulanish) — bu key bilan
+                    # vaqt sarflamay, to'g'ridan-to'g'ri keyingi key ga o'tamiz (tezroq).
                     attempts[-1]["status"] = "error"
                     attempts[-1]["step"] = f"{key_label} — vaqtinchalik xato, keyingisi sinab ko'rilmoqda..."
-                    continue
+                    break
 
     # Hamma key va modellar tugadi
     if last_error:
@@ -1264,7 +1265,8 @@ Qoidalar:
 
     user_msg = f"Inventar ma'lumotlari:\n{json.dumps(context, ensure_ascii=False, indent=2)}\n\nBoshqaruv hisobotini yoz."
 
-    ai_result = _ask_ai(system, user_msg)
+    # Hisobot uzun bo'ladi — token limitini oshiramiz (aks holda JSON truncate bo'ladi)
+    ai_result = _ask_ai(system, user_msg, max_tokens=8192)
     parsed = _parse_json(ai_result["text"])
     result = parsed or {
         "title": "Boshqaruv hisoboti",
