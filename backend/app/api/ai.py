@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 def _check_api_key():
-    if not settings.GEMINI_API_KEY and not settings.GEMINI_API_KEY_2 and not settings.GEMINI_API_KEY_3:
-        raise HTTPException(status_code=503, detail="GEMINI_API_KEY sozlanmagan. .env faylga GEMINI_API_KEY qo'shing.")
+    if not ai_service._get_api_keys():
+        raise HTTPException(status_code=503, detail="GEMINI API kaliti sozlanmagan. GEMINI_API_KEYS o'zgaruvchisini qo'shing.")
 
 
 def _handle_ai_error(e: Exception):

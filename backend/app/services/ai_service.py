@@ -50,15 +50,36 @@ _rate_limited: dict[tuple[int, str], float] = {}
 
 
 def _get_api_keys() -> list[str]:
-    """Barcha .env dagi GEMINI_API_KEY larni yig'ish."""
-    keys = []
-    if settings.GEMINI_API_KEY:
-        keys.append(settings.GEMINI_API_KEY)
-    if settings.GEMINI_API_KEY_2:
-        keys.append(settings.GEMINI_API_KEY_2)
-    if settings.GEMINI_API_KEY_3:
-        keys.append(settings.GEMINI_API_KEY_3)
-    return keys
+    """Barcha GEMINI kalitlarini yig'ish.
+
+    Qo'llab-quvvatlanadi:
+      - GEMINI_API_KEY, GEMINI_API_KEY_2, GEMINI_API_KEY_3 (alohida)
+      - GEMINI_API_KEYS (bitta o'zgaruvchida vergul/probel/yangi qator bilan)
+    """
+    keys: list[str] = []
+    for single in (
+        settings.GEMINI_API_KEY,
+        settings.GEMINI_API_KEY_2,
+        settings.GEMINI_API_KEY_3,
+    ):
+        if single and single.strip():
+            keys.append(single.strip())
+
+    # Ko'plik o'zgaruvchi: "key1,key2 key3"
+    if settings.GEMINI_API_KEYS:
+        for part in re.split(r"[,\s]+", settings.GEMINI_API_KEYS):
+            part = part.strip()
+            if part:
+                keys.append(part)
+
+    # Takrorlarni olib tashlash, tartibni saqlash
+    seen: set[str] = set()
+    unique: list[str] = []
+    for k in keys:
+        if k not in seen:
+            seen.add(k)
+            unique.append(k)
+    return unique
 
 
 def _is_rate_limited(key_idx: int, model: str) -> bool:

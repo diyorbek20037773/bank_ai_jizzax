@@ -46,8 +46,8 @@ export default function Login() {
           <div className="login-card-icon">
             <SafetyOutlined />
           </div>
-          <h2>Bank Assets</h2>
-          <p>Aktivlarni boshqarish tizimi</p>
+          <h2>Bankir AI</h2>
+          <p>AI bilan bank aktivlarini boshqarish tizimi</p>
         </div>
 
         <Form form={form} onFinish={onFinish} autoComplete="off" className="login-form">

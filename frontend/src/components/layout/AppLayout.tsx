@@ -82,7 +82,7 @@ export default function AppLayout() {
           <div className="logo-box">
             <SafetyOutlined />
           </div>
-          {!collapsed && <span className="logo-text">Bank Assets</span>}
+          {!collapsed && <span className="logo-text">Bankir AI</span>}
         </div>
         <Menu
           mode="inline"

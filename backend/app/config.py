@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    APP_NAME: str = "Bank Asset Management"
+    APP_NAME: str = "Bankir AI"
     # PostgreSQL database configuration
     DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/bank_assets"
     SECRET_KEY: str = "hackathon-secret-key-2026-bank-assets"
@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     GEMINI_API_KEY_2: str = ""
     GEMINI_API_KEY_3: str = ""
+    # Bir o'zgaruvchida bir nechta kalit (vergul/probel/yangi qator bilan)
+    GEMINI_API_KEYS: str = ""
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
 
     class Config:
