@@ -39,9 +39,8 @@ from app.core.enums import AssetStatus
 # ──────────────────────────────────────────────
 
 MODELS = [
-    "gemini-2.5-flash-lite",  # 15 RPM, 1000 RPD
-    "gemini-2.5-flash",       # 10 RPM, 250 RPD
-    "gemini-2.5-pro",         #  5 RPM, 100 RPD
+    "gemini-2.5-flash-lite",  # eng tez — 15 RPM, 1000 RPD
+    "gemini-2.5-flash",       # zaxira — 10 RPM, 250 RPD
 ]
 
 # Rate limit yegan key+model juftliklarini eslab qolish
@@ -136,7 +135,14 @@ def _ask_ai(
             })
 
             try:
-                client = genai.Client(api_key=api_key)
+                client_kwargs = {"api_key": api_key}
+                if hasattr(types, "HttpOptions"):
+                    try:
+                        # Sekin/osilgan kalit 20s dan keyin uziladi (tez fallback)
+                        client_kwargs["http_options"] = types.HttpOptions(timeout=20000)
+                    except Exception:
+                        pass
+                client = genai.Client(**client_kwargs)
                 cfg_kwargs = dict(
                     system_instruction=system_prompt,
                     temperature=0.3,
@@ -194,8 +200,11 @@ def _ask_ai(
                     attempts[-1]["step"] = f"{key_label} — kalit muammosi, keyingisiga o'tilmoqda..."
                     break  # keyingi key ga o'tish
                 else:
-                    # Boshqa har qanday xato (5xx, timeout, ulanish) — bu key bilan
-                    # vaqt sarflamay, to'g'ridan-to'g'ri keyingi key ga o'tamiz (tezroq).
+                    # Boshqa har qanday xato (5xx, timeout, ulanish) — bu keyni
+                    # belgilab qo'yamiz, keyingi so'rovlarda qayta sinalmaydi (tezroq),
+                    # va darrov keyingi key ga o'tamiz.
+                    for m in MODELS:
+                        _mark_rate_limited(key_idx, m)
                     attempts[-1]["status"] = "error"
                     attempts[-1]["step"] = f"{key_label} — vaqtinchalik xato, keyingisi sinab ko'rilmoqda..."
                     break
