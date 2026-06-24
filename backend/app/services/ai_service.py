@@ -1277,3 +1277,86 @@ Qoidalar:
     return result
 
 
+# ──────────────────────────────────────────────
+# 9. Xodim uchun shaxsiy AI yordamchi (faqat o'z aktivlari)
+# ──────────────────────────────────────────────
+def chat_my_assets(db: Session, user, user_message: str) -> dict:
+    """Xodimning shaxsiy AI yordamchisi — FAQAT o'z aktivlari bo'yicha."""
+    emp = None
+    if getattr(user, "employee_id", None):
+        emp = db.query(Employee).filter(Employee.id == user.employee_id).first()
+
+    my_assets = []
+    if emp:
+        rows = db.query(Asset).filter(Asset.current_employee_id == emp.id).all()
+        for a in rows:
+            my_assets.append({
+                "nomi": a.name,
+                "inventar": a.inventory_number,
+                "status": a.status,
+                "kategoriya": a.category.name if a.category else None,
+                "sotib_olingan": str(a.purchase_date) if a.purchase_date else None,
+                "kafolat_tugashi": str(a.warranty_expiry) if a.warranty_expiry else None,
+            })
+
+    context = {
+        "xodim": (emp.full_name if emp else None) or getattr(user, "full_name", None) or user.username,
+        "aktivlar_soni": len(my_assets),
+        "mening_aktivlarim": my_assets,
+    }
+
+    system = """Sen bank xodimining shaxsiy AI yordamchisisan.
+FAQAT shu xodimga biriktirilgan aktivlar va umumiy yordam bo'yicha javob ber.
+Boshqa xodimlar yoki butun bank statistikasini OCHMA.
+
+Javobni FAQAT JSON formatda ber:
+{"answer": "<javob matni>", "suggestions": ["<savol 1>", "<savol 2>", "<savol 3>"]}
+
+Qoidalar:
+- FAQAT o'zbek tilida, qisqa va foydali (2-4 jumla)
+- Kafolat muddati, aktiv holati, nima qilish kerakligi bo'yicha maslahat ber
+- Agar aktiv buzilsa/yo'qolsa — so'rov yuborishni tavsiya qil
+- Agar savol boshqa xodim yoki umumiy bank statistikasi haqida bo'lsa, muloyimlik bilan rad et
+- Markdown ishlatma"""
+
+    user_msg = f"Xodim ma'lumotlari:\n{json.dumps(context, ensure_ascii=False)}\n\nXodim savoli: {user_message}"
+    ai_result = _ask_ai(system, user_msg)
+    parsed = _parse_json(ai_result["text"])
+    result = parsed or {"answer": "Kechirasiz, savolingizga javob bera olmadim.", "suggestions": []}
+    result["_attempts"] = ai_result["attempts"]
+    return result
+
+
+# ──────────────────────────────────────────────
+# 10. Aktiv bo'yicha qisqa AI xulosa (QR skan uchun)
+# ──────────────────────────────────────────────
+def asset_ai_summary(db: Session, asset_id: int) -> dict:
+    """Bitta aktiv bo'yicha qisqa AI xulosa (QR skanda ko'rsatish uchun)."""
+    a = db.query(Asset).filter(Asset.id == asset_id).first()
+    if not a:
+        return {"summary": "Aktiv topilmadi."}
+
+    info = {
+        "nomi": a.name,
+        "inventar": a.inventory_number,
+        "status": a.status,
+        "kategoriya": a.category.name if a.category else None,
+        "sotib_olingan": str(a.purchase_date) if a.purchase_date else None,
+        "kafolat_tugashi": str(a.warranty_expiry) if a.warranty_expiry else None,
+        "narx_som": float(a.purchase_price) if a.purchase_price else None,
+        "izoh": a.notes,
+    }
+
+    system = """Sen bank aktivlari bo'yicha AI yordamchisan.
+Berilgan aktiv haqida QISQA va foydali xulosa yoz (2-3 jumla):
+holati, kafolat muddati va e'tibor berish kerak bo'lgan jihatlar.
+Javobni FAQAT JSON formatda ber: {"summary": "<xulosa o'zbekchada>"}"""
+
+    user_msg = f"Aktiv ma'lumotlari: {json.dumps(info, ensure_ascii=False)}"
+    ai_result = _ask_ai(system, user_msg, max_tokens=1024)
+    parsed = _parse_json(ai_result["text"])
+    result = parsed or {"summary": "AI xulosa tayyorlay olmadi."}
+    result["_attempts"] = ai_result["attempts"]
+    return result
+
+

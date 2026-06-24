@@ -2,8 +2,10 @@ export default {
   uz: {
     assistant: "AI Yordamchi",
     assistantSubtitle: "Bank aktivlari bo'yicha savol bering",
+    userSubtitle: "Sizning aktivlaringiz bo'yicha yordamchi",
     welcomeGreeting: "Assalomu alaykum!",
     welcomeText: "Men bank aktivlari bo'yicha AI yordamchiman. Savol bering!",
+    userWelcome: "Men sizning shaxsiy AI yordamchingizman. O'z aktivlaringiz bo'yicha savol bering!",
     inputPlaceholder: "Savolingizni yozing...",
     typing: "AI javob yozmoqda...",
     answerError: "Javob olishda xatolik yuz berdi",
@@ -15,6 +17,11 @@ export default {
       monthCompare: "O'tgan oy bilan solishtirganda holat qanday?",
       warrantyExpiring: "Kafolati tugayotgan aktivlar bormi?",
       itDepartment: "IT bo'limida qancha aktiv bor?",
+    },
+    uq: {
+      q1: "Menda nechta aktiv bor?",
+      q2: "Kafolatim qachon tugaydi?",
+      q3: "Aktivim buzilsa nima qilay?",
     },
 
     statusAnalyzing: "Tahlil qilmoqda...",
@@ -48,8 +55,10 @@ export default {
   ru: {
     assistant: "AI Помощник",
     assistantSubtitle: "Задайте вопрос о банковских активах",
+    userSubtitle: "Помощник по вашим активам",
     welcomeGreeting: "Здравствуйте!",
     welcomeText: "Я AI-помощник по банковским активам. Задайте вопрос!",
+    userWelcome: "Я ваш личный AI-помощник. Спросите о ваших активах!",
     inputPlaceholder: "Введите свой вопрос...",
     typing: "AI пишет ответ...",
     answerError: "Произошла ошибка при получении ответа",
@@ -61,6 +70,11 @@ export default {
       monthCompare: "Каково состояние по сравнению с прошлым месяцем?",
       warrantyExpiring: "Есть ли активы с истекающей гарантией?",
       itDepartment: "Сколько активов в IT-отделе?",
+    },
+    uq: {
+      q1: "Сколько у меня активов?",
+      q2: "Когда заканчивается моя гарантия?",
+      q3: "Что делать, если мой актив сломался?",
     },
 
     statusAnalyzing: "Анализирую...",
@@ -94,8 +108,10 @@ export default {
   en: {
     assistant: "AI Assistant",
     assistantSubtitle: "Ask a question about bank assets",
+    userSubtitle: "Assistant for your assets",
     welcomeGreeting: "Hello!",
     welcomeText: "I'm your AI assistant for bank assets. Ask a question!",
+    userWelcome: "I'm your personal AI assistant. Ask about your assets!",
     inputPlaceholder: "Type your question...",
     typing: "AI is writing a reply...",
     answerError: "An error occurred while getting the answer",
@@ -107,6 +123,11 @@ export default {
       monthCompare: "How does the situation compare to last month?",
       warrantyExpiring: "Are there any assets with expiring warranty?",
       itDepartment: "How many assets are in the IT department?",
+    },
+    uq: {
+      q1: "How many assets do I have?",
+      q2: "When does my warranty expire?",
+      q3: "What should I do if my asset breaks?",
     },
 
     statusAnalyzing: "Analyzing...",

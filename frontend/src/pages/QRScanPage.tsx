@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Typography, message, Button, Input, Space, Card, Tag, Descriptions, Row, Col, Spin } from "antd";
-import { ScanOutlined, SearchOutlined, UserOutlined, BankOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import { ScanOutlined, SearchOutlined, UserOutlined, BankOutlined, ArrowRightOutlined, RobotOutlined } from "@ant-design/icons";
 import { Html5Qrcode } from "html5-qrcode";
 import { useNavigate } from "react-router-dom";
-import { qrLookup, getAssets } from "../api";
+import { qrLookup, getAssets, aiAssetSummary } from "../api";
 import type { Asset } from "../types";
 import { STATUS_CONFIG, STATUS_COLORS, API_BASE } from "../utils/constants";
 import { useT } from "../i18n/I18nProvider";
@@ -14,6 +14,8 @@ export default function QRScanPage() {
   const [scanning, setScanning] = useState(false);
   const [manualInput, setManualInput] = useState("");
   const [foundAsset, setFoundAsset] = useState<Asset | null>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [sampleAssets, setSampleAssets] = useState<Asset[]>([]);
   const [samplesLoading, setSamplesLoading] = useState(true);
   const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -33,14 +35,28 @@ export default function QRScanPage() {
       const { data } = await qrLookup(invNum);
       message.success(t("qr.assetFound", { name: data.name }));
       stopScanning();
+      setAiSummary(null);
       setFoundAsset(data);
     } catch {
       message.error(t("qr.assetNotFound"));
     }
   };
 
+  const handleAiSummary = async (assetId: number) => {
+    setSummaryLoading(true);
+    try {
+      const { data } = await aiAssetSummary(assetId);
+      setAiSummary(data.summary);
+    } catch {
+      message.error(t("qr.aiSummaryError"));
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
   const startScanning = async () => {
     setFoundAsset(null);
+    setAiSummary(null);
     try {
       const scanner = new Html5Qrcode("qr-reader");
       scannerRef.current = scanner;
@@ -77,6 +93,7 @@ export default function QRScanPage() {
     try {
       const { data } = await qrLookup(manualInput.trim());
       message.success(t("qr.assetFound", { name: data.name }));
+      setAiSummary(null);
       setFoundAsset(data);
     } catch {
       message.error(t("qr.assetNotFound"));
@@ -87,6 +104,7 @@ export default function QRScanPage() {
     try {
       const { data } = await qrLookup(asset.inventory_number);
       message.success(t("qr.assetFound", { name: data.name }));
+      setAiSummary(null);
       setFoundAsset(data);
     } catch {
       message.error(t("qr.assetNotFound"));
@@ -204,14 +222,53 @@ export default function QRScanPage() {
                       )}
                     </div>
 
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <Button type="primary" icon={<ArrowRightOutlined />} onClick={() => navigate(`/assets/${foundAsset.id}`)}>
                         {t("qr.viewDetails")}
                       </Button>
-                      <Button onClick={() => { setFoundAsset(null); setManualInput(""); }}>
+                      <Button
+                        icon={<RobotOutlined />}
+                        loading={summaryLoading}
+                        onClick={() => handleAiSummary(foundAsset.id)}
+                        style={{ borderColor: "#722ED1", color: "#722ED1" }}
+                      >
+                        {t("qr.aiSummaryBtn")}
+                      </Button>
+                      <Button onClick={() => { setFoundAsset(null); setManualInput(""); setAiSummary(null); }}>
                         {t("qr.rescan")}
                       </Button>
                     </div>
+
+                    {(summaryLoading || aiSummary) && (
+                      <div
+                        style={{
+                          marginTop: 14,
+                          background: "linear-gradient(135deg, #F9F0FF 0%, #F0F5FF 100%)",
+                          border: "1px solid #D3ADF7",
+                          borderRadius: 10,
+                          padding: "14px 16px",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                          <RobotOutlined style={{ color: "#722ED1", fontSize: 16 }} />
+                          <Typography.Text strong style={{ fontSize: 13, color: "#722ED1" }}>
+                            {t("qr.aiSummaryTitle")}
+                          </Typography.Text>
+                        </div>
+                        {summaryLoading ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <Spin size="small" />
+                            <Typography.Text style={{ fontSize: 13, color: "#595959" }}>
+                              {t("qr.aiSummaryLoading")}
+                            </Typography.Text>
+                          </div>
+                        ) : (
+                          <Typography.Paragraph style={{ margin: 0, fontSize: 13, color: "#262626", whiteSpace: "pre-wrap" }}>
+                            {aiSummary}
+                          </Typography.Paragraph>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>

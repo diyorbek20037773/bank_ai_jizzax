@@ -17,6 +17,10 @@ export default {
     manualLabel: "Yoki inventar raqamini qo'lda kiriting:",
     sampleTitle: "Namuna QR kodlar",
     sampleHint: "QR kodlardan birini bosing — tizim aktivni topib ko'rsatadi",
+    aiSummaryBtn: "AI xulosa",
+    aiSummaryTitle: "AI xulosa",
+    aiSummaryLoading: "AI tahlil qilmoqda...",
+    aiSummaryError: "AI xulosa olinmadi",
   },
   ru: {
     assetFound: "Актив найден: {name}",
@@ -36,6 +40,10 @@ export default {
     manualLabel: "Или введите инвентарный номер вручную:",
     sampleTitle: "Примеры QR кодов",
     sampleHint: "Нажмите на один из QR кодов — система найдёт и покажет актив",
+    aiSummaryBtn: "AI сводка",
+    aiSummaryTitle: "AI сводка",
+    aiSummaryLoading: "AI анализирует...",
+    aiSummaryError: "Не удалось получить AI сводку",
   },
   en: {
     assetFound: "Asset found: {name}",
@@ -55,5 +63,9 @@ export default {
     manualLabel: "Or enter the inventory number manually:",
     sampleTitle: "Sample QR codes",
     sampleHint: "Click one of the QR codes — the system will find and show the asset",
+    aiSummaryBtn: "AI summary",
+    aiSummaryTitle: "AI summary",
+    aiSummaryLoading: "AI is analyzing...",
+    aiSummaryError: "Failed to get AI summary",
   },
 };

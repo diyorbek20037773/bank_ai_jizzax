@@ -181,3 +181,37 @@ def report(
         _handle_ai_error(e)
 
 
+@router.post("/my-assistant")
+def my_assistant(
+    req: ChatRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_auth),
+):
+    """Xodim uchun shaxsiy AI yordamchi — faqat o'z aktivlari bo'yicha."""
+    _check_api_key()
+    if not req.message.strip():
+        raise HTTPException(status_code=400, detail="Savol bo'sh bo'lishi mumkin emas")
+    try:
+        return ai_service.chat_my_assets(db, current_user, req.message.strip())
+    except HTTPException:
+        raise
+    except Exception as e:
+        _handle_ai_error(e)
+
+
+@router.get("/asset-summary/{asset_id}")
+def asset_summary(
+    asset_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_auth),
+):
+    """Bitta aktiv bo'yicha qisqa AI xulosa (QR skan uchun)."""
+    _check_api_key()
+    try:
+        return ai_service.asset_ai_summary(db, asset_id)
+    except HTTPException:
+        raise
+    except Exception as e:
+        _handle_ai_error(e)
+
+

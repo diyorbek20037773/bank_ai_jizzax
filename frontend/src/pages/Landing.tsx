@@ -3,7 +3,8 @@ import {
   SafetyOutlined, GithubOutlined, BulbOutlined, BulbFilled,
   ArrowRightOutlined, DatabaseOutlined, ScanOutlined, RobotOutlined,
   ThunderboltOutlined, CameraOutlined, FileTextOutlined, AuditOutlined,
-  GlobalOutlined,
+  GlobalOutlined, WarningOutlined, FileSearchOutlined, LineChartOutlined,
+  BankOutlined, ApartmentOutlined, SafetyCertificateOutlined, UserOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useT } from "../i18n/I18nProvider";
@@ -24,6 +25,26 @@ const FEATURES = [
 ];
 
 const TECH = ["React 19", "TypeScript", "FastAPI", "PostgreSQL", "Gemini AI", "Ant Design", "Docker", "Railway"];
+
+const PROBLEMS = [
+  { icon: <WarningOutlined />, key: "p1", color: "#FF4D4F" },
+  { icon: <FileSearchOutlined />, key: "p2", color: "#FA8C16" },
+  { icon: <LineChartOutlined />, key: "p3", color: "#722ED1" },
+];
+
+const STEPS = [
+  { icon: <DatabaseOutlined />, key: "s1" },
+  { icon: <ScanOutlined />, key: "s2" },
+  { icon: <UserOutlined />, key: "s3" },
+  { icon: <RobotOutlined />, key: "s4" },
+];
+
+const AUDIENCE = [
+  { icon: <BankOutlined />, key: "a1", color: "#1677FF" },
+  { icon: <ApartmentOutlined />, key: "a2", color: "#13C2C2" },
+  { icon: <SafetyCertificateOutlined />, key: "a3", color: "#52C41A" },
+  { icon: <UserOutlined />, key: "a4", color: "#FA8C16" },
+];
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -84,6 +105,58 @@ export default function Landing() {
             <div className="landing-stat"><div className="ls-value">7</div><div className="ls-label">{t("landing.statAiFunctions")}</div></div>
             <div className="landing-stat"><div className="ls-value">3</div><div className="ls-label">{t("landing.statLanguages")}</div></div>
           </div>
+        </div>
+      </section>
+
+      {/* ABOUT */}
+      <section className="landing-about">
+        <div className="landing-about-inner">
+          <h2 className="landing-h2">{t("landing.aboutTitle")}</h2>
+          <p className="landing-about-text">{t("landing.aboutText")}</p>
+        </div>
+      </section>
+
+      {/* PROBLEM */}
+      <section className="landing-section">
+        <h2 className="landing-h2">{t("landing.problemTitle")}</h2>
+        <p className="landing-section-sub">{t("landing.problemSub")}</p>
+        <div className="landing-features">
+          {PROBLEMS.map((p) => (
+            <div className="landing-feature" key={p.key}>
+              <div className="lf-icon" style={{ background: `${p.color}1A`, color: p.color }}>{p.icon}</div>
+              <div className="lf-title">{t(`landing.${p.key}Title`)}</div>
+              <div className="lf-desc">{t(`landing.${p.key}Desc`)}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="landing-section landing-tech-section">
+        <h2 className="landing-h2">{t("landing.howTitle")}</h2>
+        <div className="landing-steps">
+          {STEPS.map((s, i) => (
+            <div className="landing-step" key={s.key}>
+              <div className="ls-num">{i + 1}</div>
+              <div className="ls-icon">{s.icon}</div>
+              <div className="lf-title">{t(`landing.${s.key}Title`)}</div>
+              <div className="lf-desc">{t(`landing.${s.key}Desc`)}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* AUDIENCE */}
+      <section className="landing-section">
+        <h2 className="landing-h2">{t("landing.audienceTitle")}</h2>
+        <div className="landing-features">
+          {AUDIENCE.map((a) => (
+            <div className="landing-feature" key={a.key}>
+              <div className="lf-icon" style={{ background: `${a.color}1A`, color: a.color }}>{a.icon}</div>
+              <div className="lf-title">{t(`landing.${a.key}Title`)}</div>
+              <div className="lf-desc">{t(`landing.${a.key}Desc`)}</div>
+            </div>
+          ))}
         </div>
       </section>
 

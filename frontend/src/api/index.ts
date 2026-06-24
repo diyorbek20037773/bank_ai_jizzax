@@ -101,6 +101,16 @@ export const aiChat = (message: string) =>
     "/api/ai/chat", { message }
   );
 
+// Xodim uchun shaxsiy AI yordamchi (faqat o'z aktivlari)
+export const aiMyAssistant = (message: string) =>
+  api.post<{ answer: string; suggestions: string[]; _attempts?: any[] }>(
+    "/api/ai/my-assistant", { message }
+  );
+
+// QR skan uchun aktiv bo'yicha qisqa AI xulosa
+export const aiAssetSummary = (assetId: number) =>
+  api.get<{ summary: string; _attempts?: any[] }>(`/api/ai/asset-summary/${assetId}`);
+
 export const aiAutoFill = (name: string) =>
   api.post<{
     category_id: number | null; category_name: string | null;

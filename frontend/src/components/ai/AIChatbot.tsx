@@ -4,8 +4,9 @@ import {
   RobotOutlined, SendOutlined, CloseOutlined,
   BulbOutlined,
 } from "@ant-design/icons";
-import { aiChat } from "../../api";
+import { aiChat, aiMyAssistant } from "../../api";
 import { useT } from "../../i18n/I18nProvider";
+import { useAuth } from "../../context/AuthContext";
 
 type ChatMessage = {
   role: "user" | "ai";
@@ -14,7 +15,7 @@ type ChatMessage = {
   time: string;
 };
 
-const QUICK_QUESTION_KEYS = [
+const ADMIN_QUESTION_KEYS = [
   "ai.q.totalAssets",
   "ai.q.topDepartment",
   "ai.q.inRepair",
@@ -23,8 +24,17 @@ const QUICK_QUESTION_KEYS = [
   "ai.q.itDepartment",
 ];
 
+const USER_QUESTION_KEYS = [
+  "ai.uq.q1",
+  "ai.uq.q2",
+  "ai.uq.q3",
+];
+
 export default function AIChatbot() {
   const { t } = useT();
+  const { user } = useAuth();
+  const isRegularUser = user?.role === "user";
+  const QUICK_QUESTION_KEYS = isRegularUser ? USER_QUESTION_KEYS : ADMIN_QUESTION_KEYS;
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -63,7 +73,9 @@ export default function AIChatbot() {
     setLoading(true);
 
     try {
-      const { data } = await aiChat(text.trim());
+      const { data } = isRegularUser
+        ? await aiMyAssistant(text.trim())
+        : await aiChat(text.trim());
       const aiMsg: ChatMessage = {
         role: "ai",
         text: data.answer || t("ai.answerError"),
@@ -207,7 +219,7 @@ export default function AIChatbot() {
                   {t("ai.assistant")}
                 </div>
                 <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>
-                  {t("ai.assistantSubtitle")}
+                  {t(isRegularUser ? "ai.userSubtitle" : "ai.assistantSubtitle")}
                 </div>
               </div>
             </div>
@@ -253,7 +265,7 @@ export default function AIChatbot() {
                   {t("ai.welcomeGreeting")}
                 </Typography.Title>
                 <Typography.Paragraph style={{ color: "#8C8C8C", fontSize: 13, margin: "0 0 20px" }}>
-                  {t("ai.welcomeText")}
+                  {t(isRegularUser ? "ai.userWelcome" : "ai.welcomeText")}
                 </Typography.Paragraph>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {QUICK_QUESTION_KEYS.map((qKey, i) => {
